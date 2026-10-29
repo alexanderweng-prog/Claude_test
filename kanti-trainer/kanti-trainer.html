@@ -13,7 +13,7 @@
   --accent-900: oklch(0.28 0.06 155); --accent-700: oklch(0.38 0.075 155); --accent-500: oklch(0.52 0.085 155);
   --accent-200: oklch(0.90 0.035 155); --accent-100: oklch(0.95 0.02 155);
   --status-good: oklch(0.52 0.085 155); --status-warn: oklch(0.60 0.085 75); --status-warn-bg: oklch(0.95 0.02 75);
-  --status-bad: oklch(0.55 0.085 25);
+  --status-bad: oklch(0.55 0.085 25); --status-bad-bg: oklch(0.95 0.02 25);
   --radius-sm: 4px; --radius-md: 8px;
   --shadow-card: 0 1px 2px oklch(0.2 0 0 / 0.04), 0 4px 12px oklch(0.2 0 0 / 0.06);
   /* App-Aliase */
@@ -122,6 +122,46 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent-200)
 .tag::before { content: ""; width: 16px; height: 2px; background: var(--accent-700); }
 .summary .v { font-family: var(--f-mono); font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Probeprüfung */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--white); }
+.examcard { border: 1px solid var(--accent-200); background: var(--accent-100); border-radius: var(--radius-md); padding: 20px; display: flex; gap: 16px; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+.examcard h2 { font-size: 24px; }
+.examcard p { margin: 6px 0 0; max-width: 62ch; }
+.callout { background: var(--accent-100); border: 1px solid var(--accent-200); border-radius: var(--radius-md); padding: 20px; display: flex; gap: 16px; }
+.callout ul { margin: 6px 0 0; padding-left: 20px; }
+.exbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--white); border-bottom: 1px solid var(--line); padding-block: 10px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.timer { font-family: var(--f-mono); font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.timer.warn { color: var(--status-warn); }
+.exactions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.ex-task { border: 1px solid var(--line); border-radius: var(--radius-md); padding: 20px; display: flex; flex-direction: column; gap: 18px; background: var(--white); }
+.ex-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+.ex-head h2 { font-size: 22px; }
+.ex-part { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; }
+.ex-letter { font-weight: 700; padding-top: 2px; }
+.ex-body { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.ex-body .q { font-size: clamp(20px, 4.2vw, 28px); }
+.ex-body .field { flex: 0 1 340px; }
+.ex-body .field input { font-size: 20px; padding: 8px 12px; }
+.ex-body .chips { margin-top: 0; }
+.ex-body .chip { font-size: 15px; min-width: 36px; padding: 4px 8px; }
+.ex-body .choices .btn { font-size: 22px; min-width: 60px; padding: 8px 16px; }
+.btn.on { background: var(--accent-100); border-color: var(--accent-700); color: var(--accent-700); }
+.ptbadge { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 4px 10px; border-radius: var(--radius-sm); align-self: flex-start; }
+.ptbadge.good { background: var(--accent-100); color: var(--status-good); }
+.ptbadge.bad { background: var(--status-bad-bg); color: var(--status-bad); }
+.ptbadge.warn { background: var(--status-warn-bg); color: var(--status-warn); }
+.ex-fb { font-size: 15px; }
+.ex-fb .ex { color: var(--muted); font-family: var(--f-mono); font-size: 13px; }
+.result { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 24px 32px; align-items: center; }
+@media (max-width: 640px) { .result { grid-template-columns: minmax(0, 1fr); } }
+.notebig { font-family: var(--f-display); font-size: 64px; font-weight: 600; line-height: 1; }
+.tablewrap { overflow-x: auto; }
+.score { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+@media (max-width: 480px) { .score th, .score td { padding: 6px 3px; font-size: 13px; } }
+.score th, .score td { border: 1px solid var(--line-strong); padding: 6px 8px; text-align: center; font-size: 14px; }
+.score th:first-child, .score td:first-child { text-align: left; color: var(--muted); font-weight: 400; }
+.score .tot { font-weight: 700; }
 </style>
 
 <div class="wrap">
@@ -142,10 +182,20 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent-200)
         <circle id="ringArc" cx="22" cy="22" r="18" fill="none" stroke="var(--accent-500)" stroke-width="5" stroke-linecap="round" transform="rotate(-90 22 22)" stroke-dasharray="113.1" stroke-dashoffset="113.1"></circle>
         <text id="ringTxt" x="22" y="26" text-anchor="middle" font-size="11" font-family="JetBrains Mono, monospace" font-weight="700" fill="var(--ink)">0</text>
       </svg>
+  </div>
 
   <section id="home" class="stack">
     <p class="intro">Die Aufgabentypen stammen aus den Aufnahmeprüfungen 2022 bis 2025, Teil 1 ohne Taschenrechner. Die Schwierigkeit passt sich nach jeder Antwort an: Du löst etwa 4 von 5 Aufgaben richtig. Rechne auf einem Blatt mit und tippe nur das Ergebnis ein.</p>
     <div class="topics" id="topicList"></div>
+    <div class="examcard">
+      <div>
+        <div class="subject">Prüfungssimulation</div>
+        <h2>Probeprüfung</h2>
+        <p>45 Minuten, 6 Aufgaben, 24 Punkte, am Schluss eine Note. Aufbau wie Teil 1 der Aufnahmeprüfung. Rückmeldung erst nach der Abgabe.</p>
+        <p class="note" id="examHist" hidden></p>
+      </div>
+      <button class="btn" id="examBtn" type="button">Probeprüfung starten</button>
+    </div>
     <div class="how">
       <div><span class="label">Wie an der Prüfung</span><p>Brüche müssen vollständig gekürzt sein. Terme zählen nur, wenn sie ganz vereinfacht sind.</p></div>
       <div><span class="label">Hilfe bei Fehlern</span><p>Nach einem Fehler siehst du die Lösung. Zwei Fehler in Folge: Die nächste Aufgabe wird leichter.</p></div>
@@ -157,6 +207,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent-200)
     </div>
     <div class="foot" style="border-top:1px solid var(--line);padding-top:12px">Kanti-Trainer · Autor: Alexander Weng · Sekundarschule Halingen</div>
   </section>
+
+  <section id="exam" class="stack" hidden></section>
 
   <section id="play" hidden>
     <div id="breakBanner" class="banner" hidden>
@@ -579,6 +631,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent-200)
   let sess = null, item = null, shownAt = 0, awaitingNext = false, breakShown = false;
 
   function startSession(mode) {
+    $('exam').hidden = true;
     sess = { mode, count: 0, rightRun: 0, wrongRun: 0, log: [], xp: 0, start: Date.now(), startTheta: {}, touched: new Set(), roundPending: false };
     for (const k in TOPICS) sess.startTheta[k] = state.topics[k].theta;
     $('home').hidden = true; $('play').hidden = false; $('roundEnd').hidden = true; $('taskArea').hidden = false;
@@ -674,8 +727,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent-200)
   }
 
   // ---------- Darstellung ----------
-  function insert(txt) {
-    const i = $('ansInput'), s = i.selectionStart ?? i.value.length, e = i.selectionEnd ?? s;
+  function insert(txt, el) {
+    const i = el || $('ansInput'), s = i.selectionStart ?? i.value.length, e = i.selectionEnd ?? s;
     i.setRangeText(txt, s, e, 'end'); i.focus();
   }
   function renderItem() {
@@ -756,14 +809,18 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent-200)
     h += `<button class="topic mix" type="button" data-mode="mix"><span class="ap">Alle Themen</span><h3>Prüfungsmix</h3>
       <span>Alle sieben Themen im Wechsel. Jedes Thema behält seine eigene Stufe.</span></button>`;
     $('topicList').innerHTML = h;
+    const ex = state.exams || [];
+    $('examHist').hidden = !ex.length;
+    $('examHist').textContent = ex.length ? 'Letzte Probeprüfungen: ' + ex.slice(0, 5).map(e => `${e.pts}/24 → ${e.note.toFixed(1)}`).join(' · ') : '';
     $('topicList').querySelectorAll('.topic').forEach(b => b.onclick = () => startSession(b.dataset.mode));
   }
 
-  function goHome() { $('play').hidden = true; $('home').hidden = false; $('breakBanner').hidden = true; renderHome(); renderStats(); }
+  function goHome() { if (exam && !exam.done) { exam.done = true; } clearInterval(timerId); $('exam').hidden = true; $('play').hidden = true; $('home').hidden = false; $('breakBanner').hidden = true; renderHome(); renderStats(); }
 
   $('ansForm').addEventListener('submit', e => { e.preventDefault(); submit($('ansInput').value); });
   document.addEventListener('keydown', e => { if (e.key === 'Enter' && awaitingNext && sess && !sess.roundPending && !$('play').hidden && $('roundEnd').hidden && document.activeElement !== $('ansBtn')) { e.preventDefault(); nextItem(); } });
   $('quitBtn').onclick = goHome;
+  $('examBtn').onclick = showExamIntro;
   $('breakOk').onclick = () => { $('breakBanner').hidden = true; $('ansInput').focus(); };
   const onReset = () => {
     const row = $('resetRow'), html = row.innerHTML;
@@ -774,8 +831,143 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent-200)
   };
   $('resetBtn').onclick = onReset;
 
+
+  // ---------- Probeprüfung ----------
+  // 6 Aufgaben à 4 Teilaufgaben (je 1 Punkt), aufsteigend schwierig wie in den Prüfungen 2022–2025
+  const EXAM = [
+    { title: 'Rechnen, Potenzen, Brüche', parts: [['rechnen', 22], ['rechnen', 40], ['brueche', 42], ['rechnen', 64]] },
+    { title: 'Terme', parts: [['terme', 30], ['terme', 45], ['terme', 70], ['terme', 92]] },
+    { title: 'Gleichungen', parts: [['gleichungen', 40], ['gleichungen', 68], ['gleichungen', 90], ['brueche', 88]] },
+    { title: 'Masse, Vergleiche, Prozent', parts: [['masse', 30], ['masse', 45], ['masse', 62], ['masse', 80]] },
+    { title: 'Teiler und Vielfache', parts: [['teiler', 25], ['teiler', 45], ['teiler', 60], ['teiler', 82]] },
+    { title: 'Muster und Wahrscheinlichkeit', parts: [['muster', 10], ['muster', 30], ['muster', 45], ['muster', 90]] }
+  ];
+  const EXAM_MIN = 45, P6 = 22;   // Annahme: 22 von 24 Punkten ergeben die Note 6
+  const noteOf = pts => Math.round(Math.min(6, 1 + 5 * pts / P6) * 10) / 10;
+  let exam = null, timerId = null;
+  const mmss = sec => `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
+
+  function showExamIntro() {
+    $('home').hidden = true; $('play').hidden = true; const el = $('exam'); el.hidden = false;
+    el.innerHTML = `<div class="callout"><span class="badge" aria-hidden="true">i</span><div>
+        <div class="label" style="color:var(--accent-900)">Hinweis</div>
+        <ul>
+          <li>Der Taschenrechner ist nicht erlaubt. Rechne auf einem Blatt und tippe nur das Ergebnis ein.</li>
+          <li>Du hast 45 Minuten. Danach wird automatisch abgegeben.</li>
+          <li>Du kannst die Aufgaben in beliebiger Reihenfolge lösen und Antworten ändern.</li>
+          <li>Brüche vollständig kürzen, Terme ganz vereinfachen.</li>
+          <li>Lädst du die Seite neu, geht die Prüfung verloren.</li>
+        </ul></div></div>
+      <div class="actions"><button class="btn" id="exGo" type="button">Start: 45 Minuten</button><button class="btn ghost" id="exBack" type="button">Zurück</button></div>`;
+    $('exGo').onclick = startExam; $('exBack').onclick = goHome;
+    scrollTo(0, 0);
+  }
+
+  function startExam() {
+    exam = { start: Date.now(), items: [], ans: [], done: false };
+    EXAM.forEach((A, ai) => A.parts.forEach(([tk, d], pi) => {
+      const dd = clamp(d + R(-4, 4), 0, 100);
+      exam.items.push(Object.assign(TOPICS[tk].gen(dd), { topic: tk, ai, pi, d: dd }));
+      exam.ans.push('');
+    }));
+    renderExam();
+    clearInterval(timerId); timerId = setInterval(tick, 1000); tick();
+    scrollTo(0, 0);
+  }
+
+  function tick() {
+    const left = Math.max(0, EXAM_MIN * 60 - Math.floor((Date.now() - exam.start) / 1000));
+    const t = $('exTimer'); if (!t) return;
+    t.textContent = mmss(left); t.classList.toggle('warn', left <= 300);
+    if (left === 0) submitExam(true);
+  }
+
+  function partHtml(it, i) {
+    const choice = it.kind === 'choice';
+    const chips = it.kind === 'term' ? [...it.vars, '²', '^', '(', ')', '/', '−'] : it.kind === 'frac' ? ['/', '−'] : choice ? [] : ['−'];
+    const ph = it.kind === 'frac' ? 'z. B. −7/4' : it.kind === 'term' ? 'z. B. 3x^2 − 5x' : '';
+    return `<div class="ex-part"><div class="ex-letter">${'abcd'[it.pi]})</div><div class="ex-body">
+      <span class="label">${it.label}</span>${it.ctx ? `<p class="ctx">${it.ctx}</p>` : ''}<div class="q">${it.q}</div>
+      ${choice ? `<div class="choices" data-i="${i}">${it.choices.map(c => `<button class="btn ghost" type="button" data-v="${c}">${c}</button>`).join('')}</div>`
+        : `<div class="answer"><label class="field"><input id="exIn${i}" data-i="${i}" type="text" inputmode="${it.kind === 'num' ? 'decimal' : 'text'}" placeholder="${ph}" aria-label="Antwort ${it.ai + 1}${'abcd'[it.pi]}" spellcheck="false" autocapitalize="off" autocomplete="off"><span class="unit">${it.unit || ''}</span></label></div>`}
+      ${chips.length ? `<div class="chips" data-i="${i}">${chips.map(c => `<button class="chip" type="button" data-v="${c}">${c}</button>`).join('')}</div>` : ''}
+      <div class="ex-fb" id="exFb${i}"></div></div></div>`;
+  }
+
+  function renderExam() {
+    const el = $('exam');
+    let h = `<div class="exbar"><div><span class="label">Probeprüfung · Restzeit</span><div class="timer" id="exTimer">45:00</div></div>
+      <div class="exactions" id="exActions"><button class="btn" id="exSubmit" type="button">Abgeben</button></div></div>`;
+    EXAM.forEach((A, ai) => {
+      h += `<section class="ex-task"><div class="ex-head"><h2>Aufgabe ${ai + 1}</h2><span class="note">${A.title} · 4 Pt.</span></div>`;
+      exam.items.forEach((it, i) => { if (it.ai === ai) h += partHtml(it, i); });
+      h += '</section>';
+    });
+    el.innerHTML = h;
+    el.querySelectorAll('input[data-i]').forEach(inp => {
+      inp.oninput = () => { exam.ans[+inp.dataset.i] = inp.value; };
+      inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); const all = [...el.querySelectorAll('input[data-i]')]; const n = all[all.indexOf(inp) + 1]; if (n) n.focus(); } };
+    });
+    el.querySelectorAll('.choices').forEach(row => row.querySelectorAll('button').forEach(b => b.onclick = () => {
+      if (exam.done) return;
+      exam.ans[+row.dataset.i] = b.dataset.v;
+      row.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    }));
+    el.querySelectorAll('.chips').forEach(row => row.querySelectorAll('button').forEach(b => {
+      b.onmousedown = e => e.preventDefault();
+      b.onclick = () => { const inp = $('exIn' + row.dataset.i); insert(b.dataset.v, inp); exam.ans[+row.dataset.i] = inp.value; };
+    }));
+    $('exSubmit').onclick = confirmSubmit;
+  }
+
+  function confirmSubmit() {
+    const open = exam.ans.filter(a => !a.trim()).length;
+    $('exActions').innerHTML = `<span>${open ? `${open} Teilaufgaben sind noch leer. ` : ''}Wirklich abgeben?</span>
+      <button class="btn" id="exYes" type="button">Abgeben</button><button class="btn ghost" id="exNo" type="button">Weiter rechnen</button>`;
+    $('exYes').onclick = () => submitExam(false);
+    $('exNo').onclick = () => { $('exActions').innerHTML = '<button class="btn" id="exSubmit" type="button">Abgeben</button>'; $('exSubmit').onclick = confirmSubmit; };
+  }
+
+  function submitExam(timeUp) {
+    if (exam.done) return;
+    exam.done = true; clearInterval(timerId);
+    const used = Math.min(EXAM_MIN * 60, Math.floor((Date.now() - exam.start) / 1000));
+    const per = EXAM.map(() => 0), lost = {};
+    exam.items.forEach((it, i) => {
+      const raw = exam.ans[i].trim();
+      item = it;
+      const r = raw ? check(raw) : { empty: true };
+      const ok = r.ok === true;
+      if (ok) per[it.ai]++; else lost[it.topic] = (lost[it.topic] || 0) + 1;
+      // Ergebnis fliesst schwach in die Trainingsstufe ein
+      const t = state.topics[it.topic]; t.theta = clamp(t.theta + 4 * ((ok ? 1 : 0) - prob(t.theta, it.d)), 0, 105);
+      const sol = (it.show !== undefined ? it.show : fmt(it.ans)) + (it.unit ? ' ' + it.unit : '');
+      const why = r.empty ? 'Nicht beantwortet. ' : r.invalid ? 'Ungültige Eingabe. ' : r.msg ? r.msg + ' ' : '';
+      $('exFb' + i).innerHTML = ok ? '<span class="ptbadge good">1 Pt. · richtig</span>'
+        : `<span class="ptbadge ${r.empty ? 'warn' : 'bad'}">0 Pt.</span> ${why}Lösung: <strong>${sol}</strong><br><span class="ex">${it.ex || ''}</span>`;
+    });
+    const pts = per.reduce((a, b) => a + b, 0), note = noteOf(pts);
+    state.exams = [{ date: dayKey(), pts, note }, ...(state.exams || [])].slice(0, 10);
+    save();
+    $('exam').querySelectorAll('input, .chips button, .choices button').forEach(x => x.disabled = true);
+    const worst = Object.entries(lost).sort((a, b) => b[1] - a[1])[0];
+    const bar = $('exam').querySelector('.exbar');
+    bar.outerHTML = `<div class="card"><div class="result">
+        <div><span class="label">${timeUp ? 'Zeit abgelaufen' : 'Abgegeben nach ' + mmss(used)}</span><div class="notebig">${note.toFixed(1)}</div><div class="note">${pts} von 24 Punkten</div></div>
+        <div class="tablewrap"><table class="score"><tr><th>Aufgabe</th>${EXAM.map((_, i) => `<th>${i + 1}</th>`).join('')}<th>Total</th></tr>
+          <tr><td>mögliche Punkte</td>${EXAM.map(() => '<td>(4)</td>').join('')}<td>(24)</td></tr>
+          <tr><td>erreichte Punkte</td>${per.map(p => `<td>${p}</td>`).join('')}<td class="tot">${pts}</td></tr></table></div>
+      </div>
+      <p class="note" style="margin-top:16px">Note = 1 + 5 · Punkte : ${P6}, höchstens 6. Die echte Notenskala der Kantonsschulen ist nicht veröffentlicht; ${P6} Punkte für die 6 sind eine Annahme. Bewertet wird nur das Ergebnis, nicht der Lösungsweg.</p>
+      <div class="actions" style="margin-top:14px">${worst ? `<button class="btn" id="exTrain" type="button">${TOPICS[worst[0]].name} üben (${worst[1]} Pt. verloren)</button>` : ''}
+        <button class="btn ghost" id="exAgain" type="button">Neue Probeprüfung</button><button class="btn ghost" id="exHome" type="button">Themenwahl</button></div></div>`;
+    if (worst) $('exTrain').onclick = () => { $('exam').hidden = true; startSession(worst[0]); };
+    $('exAgain').onclick = showExamIntro; $('exHome').onclick = goHome;
+    renderStats(); scrollTo(0, 0);
+  }
+
   // Testzugang für automatische Prüfungen
-  window.__kt = { TOPICS, check: (it, raw) => { item = it; return check(raw); } };
+  window.__kt = { TOPICS, check: (it, raw) => { item = it; return check(raw); }, exam: () => exam, submitExam };
 
   renderHome(); renderStats();
 })();
