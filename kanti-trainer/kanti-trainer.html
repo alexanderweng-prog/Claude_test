@@ -1,0 +1,778 @@
+<title>Kanti-Trainer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: eine App-Fläche; Start = Themen der Aufnahmeprüfung, Training = Aufgabe links, Flow-Messung rechts (mobil darunter) */
+:root {
+  --bg: #EDF1ED; --surface: #FFFFFF; --ink: #18221F; --muted: #56645E; --line: #D3DBD5;
+  --accent: #2343C4; --accent-ink: #FFFFFF; --flow: #E6A13A; --flow-soft: #F6E3C2;
+  --ok: #1D8455; --bad: #C23E2D;
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111715; --surface: #1A221F; --ink: #E6EDE9; --muted: #98A69F; --line: #2B3632;
+  --accent: #8FA5FF; --accent-ink: #0E1430; --flow: #E8B159; --flow-soft: #3A3121;
+  --ok: #5CC690; --bad: #F07966; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111715; --surface: #1A221F; --ink: #E6EDE9; --muted: #98A69F; --line: #2B3632;
+  --accent: #8FA5FF; --accent-ink: #0E1430; --flow: #E8B159; --flow-soft: #3A3121;
+  --ok: #5CC690; --bad: #F07966; color-scheme: dark }
+
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.5; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 20px; }
+.stack { display: flex; flex-direction: column; gap: 20px; }
+h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; line-height: 1.15; }
+button { font: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--flow); outline-offset: 2px; }
+.label { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { display: flex; flex-direction: column; }
+.brand h1 { font-size: 28px; font-weight: 800; letter-spacing: -.02em; }
+.brand h1 b { color: var(--accent); font-weight: 800; }
+.brand span { font-size: 13px; color: var(--muted); }
+.stats { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; align-items: flex-end; }
+.stat .v { font-family: var(--f-mono); font-weight: 700; font-size: 18px; font-variant-numeric: tabular-nums; }
+.ring { width: 44px; height: 44px; }
+
+.intro { max-width: 66ch; color: var(--muted); margin: 0; }
+.topics { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+.topic { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 8px; text-align: left; color: var(--ink); transition: transform .15s, border-color .15s; }
+.topic:hover { border-color: var(--accent); transform: translateY(-2px); }
+.topic h3 { font-size: 20px; font-weight: 800; }
+.topic .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.topic .ap { font-size: 13px; color: var(--muted); }
+.stufe { font-family: var(--f-mono); font-weight: 700; font-size: 15px; }
+.bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+.topic.mix { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.topic.mix .label, .topic.mix .ap { color: var(--accent-ink); opacity: .85; }
+.how { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 28px; border-top: 1px solid var(--line); padding-top: 18px; }
+.how p { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
+.foot { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+.linkbtn { background: none; border: 0; color: var(--muted); text-decoration: underline; padding: 0; }
+.linkbtn.danger { color: var(--bad); }
+
+.play { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 780px) { .play { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; min-width: 0; }
+.taskhead { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pill { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.pill.challenge { background: var(--flow); color: #2A1A00; border-color: var(--flow); }
+.progress { display: flex; gap: 4px; margin-top: 14px; }
+.progress i { flex: 1; height: 5px; border-radius: 3px; background: var(--line); }
+.progress i.ok { background: var(--ok); } .progress i.bad { background: var(--bad); } .progress i.now { background: var(--ink); }
+.task { padding-block: 28px 20px; display: flex; flex-direction: column; gap: 8px; }
+.ctx { margin: 0; color: var(--muted); max-width: 60ch; }
+.q { font-family: var(--f-mono); font-weight: 700; font-size: clamp(24px, 5.2vw, 40px); line-height: 1.35; overflow-wrap: anywhere; }
+.q sup { font-size: .55em; }
+.fr { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: .78em; line-height: 1.15; margin: 0 .12em; }
+.fr > span:first-child { border-bottom: 2px solid currentColor; padding: 0 .2em .08em; }
+.fr > span:last-child { padding: .08em .2em 0; }
+.rad { border-top: 2px solid currentColor; padding: 2px .15em 0; margin-left: 1px; }
+.answer { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+.field { flex: 1 1 200px; display: flex; align-items: center; border: 2px solid var(--line); border-radius: 12px; background: var(--bg); min-width: 0; }
+.field:focus-within { border-color: var(--accent); }
+.field input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink); font-family: var(--f-mono); font-size: 24px; font-weight: 700; padding: 12px 14px; outline: none; }
+.field .unit { padding-right: 14px; font-family: var(--f-mono); font-size: 20px; color: var(--muted); }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.chip { font-family: var(--f-mono); font-weight: 700; font-size: 17px; min-width: 42px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+.choices { display: flex; gap: 12px; flex-wrap: wrap; }
+.choices .btn { font-family: var(--f-mono); font-size: 28px; min-width: 76px; }
+.btn { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 12px; padding: 12px 22px; font-weight: 700; font-size: 17px; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn.ghost { background: transparent; color: var(--ink); border: 2px solid var(--line); }
+.feedback { min-height: 56px; margin-top: 14px; font-size: 16px; }
+.feedback .ok { color: var(--ok); font-weight: 700; } .feedback .bad { color: var(--bad); font-weight: 700; }
+.feedback .ex { color: var(--muted); font-family: var(--f-mono); font-size: 14px; }
+.feedback .fr { font-size: .9em; }
+.shake { animation: shake .3s; } .pop { animation: pop .35s; }
+@keyframes shake { 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+@keyframes pop { 50% { transform: scale(1.03) } }
+@media (prefers-reduced-motion: reduce) { .shake, .pop { animation: none } .topic { transition: none } }
+
+.side { display: flex; flex-direction: column; gap: 16px; }
+.zone { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.zone .pill.flow { background: var(--flow-soft); border-color: var(--flow); color: var(--ink); }
+.zone .pill.easy, .zone .pill.hard { color: var(--ink); }
+.gauge { position: relative; height: 14px; border-radius: 7px; background: var(--line); margin-top: 10px; }
+.gauge .band { position: absolute; top: 0; bottom: 0; left: 70%; width: 20%; background: var(--flow); opacity: .55; border-radius: 3px; }
+.gauge .mark { position: absolute; top: -4px; width: 4px; height: 22px; background: var(--ink); border-radius: 2px; transform: translateX(-2px); transition: left .4s; }
+.gscale { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 4px; }
+.chart svg { width: 100%; height: auto; display: block; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin-top: 6px; }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; background: var(--c); }
+.note { font-size: 14px; color: var(--muted); margin: 0; }
+.banner { background: var(--flow-soft); border: 1px solid var(--flow); border-radius: 12px; padding: 12px 16px; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 16px; }
+
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-block: 18px; }
+.summary div { border-top: 2px solid var(--line); padding-top: 8px; }
+.summary .v { font-family: var(--f-mono); font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><h1>Kanti<b>-</b>Trainer</h1><span>Aufnahmeprüfung Thurgau · Mathematik 1M ohne Taschenrechner</span></div>
+    <div class="stats">
+      <div class="stat"><span class="label">Level</span><span class="v" id="sLevel">1</span></div>
+      <div class="stat"><span class="label">XP</span><span class="v" id="sXp">0</span></div>
+      <div class="stat"><span class="label">Tage in Folge</span><span class="v" id="sDays">0</span></div>
+      <svg class="ring" viewBox="0 0 44 44" aria-label="Tagesziel">
+        <circle cx="22" cy="22" r="18" fill="none" stroke="var(--line)" stroke-width="5"></circle>
+        <circle id="ringArc" cx="22" cy="22" r="18" fill="none" stroke="var(--flow)" stroke-width="5" stroke-linecap="round" transform="rotate(-90 22 22)" stroke-dasharray="113.1" stroke-dashoffset="113.1"></circle>
+        <text id="ringTxt" x="22" y="26" text-anchor="middle" font-size="11" font-family="JetBrains Mono, monospace" font-weight="700" fill="var(--ink)">0</text>
+      </svg>
+    </div>
+  </header>
+
+  <section id="home" class="stack">
+    <p class="intro">Die Aufgabentypen stammen aus den Aufnahmeprüfungen 2022 bis 2025, Teil 1 ohne Taschenrechner. Die Schwierigkeit passt sich nach jeder Antwort an: Du löst etwa 4 von 5 Aufgaben richtig. Rechne auf einem Blatt mit und tippe nur das Ergebnis ein.</p>
+    <div class="topics" id="topicList"></div>
+    <div class="how">
+      <div><span class="label">Wie an der Prüfung</span><p>Brüche müssen vollständig gekürzt sein. Terme zählen nur, wenn sie ganz vereinfacht sind.</p></div>
+      <div><span class="label">Hilfe bei Fehlern</span><p>Nach einem Fehler siehst du die Lösung. Zwei Fehler in Folge: Die nächste Aufgabe wird leichter.</p></div>
+      <div><span class="label">Nicht in der App</span><p>Konstruktionen, Körpernetze, Diagramme und Textaufgaben in Gleichungen übersetzen. Diese Aufgaben weiter auf Papier üben.</p></div>
+    </div>
+    <div class="foot" id="resetRow">
+      <span>Tagesziel: 30 Aufgaben. Der Fortschritt bleibt nur in diesem Browser gespeichert.</span>
+      <button class="linkbtn" id="resetBtn" type="button">Fortschritt zurücksetzen</button>
+    </div>
+  </section>
+
+  <section id="play" hidden>
+    <div id="breakBanner" class="banner" hidden>
+      <span>Du trainierst seit 20 Minuten. Eine kurze Pause hilft beim Behalten.</span>
+      <button class="btn ghost" id="breakOk" type="button">Weiter trainieren</button>
+    </div>
+    <div class="play">
+      <div class="card" id="taskCard">
+        <div class="taskhead">
+          <span class="label" id="tTopic">Thema</span>
+          <span id="tPills"></span>
+        </div>
+        <div class="progress" id="tProgress"></div>
+        <div id="taskArea">
+          <div class="task">
+            <span class="label" id="tLabel">Berechne</span>
+            <p class="ctx" id="tCtx" hidden></p>
+            <div class="q" id="tQ"></div>
+          </div>
+          <form class="answer" id="ansForm" autocomplete="off">
+            <label class="field" for="ansInput">
+              <input id="ansInput" type="text" inputmode="decimal" aria-label="Deine Antwort" spellcheck="false" autocapitalize="off">
+              <span class="unit" id="tUnit"></span>
+            </label>
+            <button class="btn" id="ansBtn" type="submit">Prüfen</button>
+          </form>
+          <div class="choices" id="choiceRow" hidden></div>
+          <div class="chips" id="chipRow"></div>
+          <div class="feedback" id="feedback" aria-live="polite"></div>
+        </div>
+        <div id="roundEnd" hidden></div>
+        <div class="foot" style="margin-top:8px"><button class="linkbtn" id="quitBtn" type="button">Zur Themenwahl</button><span>Enter = Prüfen / Weiter</span></div>
+      </div>
+
+      <aside class="side">
+        <div class="card">
+          <div class="zone"><span class="label">Trefferquote (letzte 10)</span><span class="pill" id="zonePill">Messung läuft</span></div>
+          <div class="gauge"><div class="band"></div><div class="mark" id="gMark" style="left:80%"></div></div>
+          <div class="gscale"><span>0 %</span><span>Flow-Zone 70–90 %</span><span>100 %</span></div>
+        </div>
+        <div class="card chart">
+          <span class="label">Aufgaben und Können</span>
+          <svg id="chart" viewBox="0 0 330 120" role="img" aria-label="Schwierigkeit der Aufgaben und deine Stufe"></svg>
+          <div class="legend">
+            <span style="--c:var(--ok)">richtig</span><span style="--c:var(--bad)">falsch</span><span style="--c:var(--ink)">deine Stufe</span>
+          </div>
+          <p class="note" style="margin-top:8px">Die Säulen zeigen, wie schwer jede Aufgabe war. Sie liegen absichtlich knapp unter deiner Stufe.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  // ---------- Hilfsfunktionen ----------
+  const $ = id => document.getElementById(id);
+  const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  const sgn = () => pick([1, -1]);
+  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+  const clean = x => Math.round(x * 1e9) / 1e9;
+  const fmt = x => { const r = clean(x); return r < 0 ? '−' + String(-r) : String(r); };
+  const par = x => x < 0 ? '(' + fmt(x) + ')' : fmt(x);
+  const sup = e => e === 1 ? '' : e === 2 ? '²' : e === 3 ? '³' : `<sup>${e}</sup>`;
+  const vp = (v, e) => e === 0 ? '' : v + sup(e);
+  const rad = s => `√<span class="rad">${s}</span>`;
+
+  // Brüche als [Zähler, Nenner], immer gekürzt, Nenner positiv
+  const gcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a; };
+  const lcm = (a, b) => Math.abs(a * b) / gcd(a, b);
+  const F = (n, d = 1) => { if (d < 0) { n = -n; d = -d; } const g = gcd(n, d) || 1; return [n / g, d / g]; };
+  const fa = (x, y) => F(x[0] * y[1] + y[0] * x[1], x[1] * y[1]);
+  const fs = (x, y) => fa(x, [-y[0], y[1]]);
+  const fm = (x, y) => F(x[0] * y[0], x[1] * y[1]);
+  const fd = (x, y) => F(x[0] * y[1], x[1] * y[0]);
+  const fr = (n, d) => `<span class="fr"><span>${n}</span><span>${d}</span></span>`;
+  const fh = (f, p) => { if (f[1] === 1) return p && f[0] < 0 ? `(${fmt(f[0])})` : fmt(f[0]); const h = fr(Math.abs(f[0]), f[1]); return f[0] < 0 ? (p ? `(−${h})` : `−${h}`) : h; };
+  function rf(maxD, neg) { for (;;) { const d = R(2, maxD), n = R(1, 2 * d); if (n % d === 0) continue; return F(neg && Math.random() < .4 ? -n : n, d); } }
+
+  // Terme als Text: [[Koeffizient, Variablenteil], …]
+  function poly(parts) {
+    let s = '';
+    for (const [c, b] of parts) {
+      if (c === 0) continue;
+      const a = Math.abs(c), core = b ? (a === 1 ? '' : a) + b : String(a);
+      s += s ? (c < 0 ? ' − ' : ' + ') + core : (c < 0 ? '−' : '') + core;
+    }
+    return s || '0';
+  }
+  const lin = (a, b, v = 'x') => poly([[a, v], [b, '']]);
+  const nz = (a, b) => { let x; do x = R(a, b); while (x === 0); return x; };
+
+  // ---------- 1 Rechnen und Potenzen ----------
+  function genRechnen(d) {
+    let q, ans, ex = '', label = 'Berechne';
+    if (d < 15) { const a = R(5, 30), b = R(2, 6), c = -R(2, 9), e = R(2, 20); q = `${a} + ${b} · ${par(c)} − ${e}`; ans = a + b * c - e; ex = `Punkt vor Strich: ${b} · ${par(c)} = ${fmt(b * c)}`; }
+    else if (d < 30) {
+      if (Math.random() < .5) { const a = R(10, 40), b = -R(2, 9), c = R(2, 6); q = `${a} − ${par(b)} · ${c}`; ans = a - b * c; ex = `${par(b)} · ${c} = ${fmt(b * c)}, dann ${a} − ${par(b * c)} = ${fmt(ans)}`; }
+      else { const a = R(2, 12), b = R(13, 25), c = -R(2, 5); q = `(${a} − ${b}) · ${par(c)}`; ans = (a - b) * c; ex = `Klammer zuerst: ${a} − ${b} = ${fmt(a - b)}`; }
+    } else if (d < 45) {
+      const v = R(1, 3);
+      if (v === 1) { const b = R(2, 4); q = `(−${b})³ + ${b}⁰`; ans = -(b ** 3) + 1; ex = `(−${b})³ = ${fmt(-(b ** 3))}, und jede Zahl hoch 0 ist 1`; }
+      else if (v === 2) { const m = R(3, 7), n = R(3, 9); q = `2${sup(m)} − ${n}²`; ans = 2 ** m - n * n; ex = `2${sup(m)} = ${2 ** m}, ${n}² = ${n * n}`; }
+      else { const k = R(2, 5), e = R(2, 4); q = `0.${k}${sup(e)}`; ans = clean((k / 10) ** e); ex = `${k}${sup(e)} = ${k ** e}, dann ${e} Nachkommastellen`; }
+    } else if (d < 55) {
+      const v = R(1, 3);
+      if (v === 1) { const n = R(11, 25); q = rad(n * n); ans = n; ex = `${n} · ${n} = ${n * n}`; }
+      else if (v === 2) { const k = pick([2, 3, 5, 6, 7]), m = R(3, 12); q = `${rad(k * m * m)} : ${rad(k)}`; ans = m; ex = `${rad(k * m * m)} : ${rad(k)} = ${rad(m * m)} = ${m}`; }
+      else { const k = pick([2, 3, 5, 6, 7]), m = R(2, 6); q = `${rad(k)} · ${rad(k * m * m)}`; ans = k * m; ex = `${rad(k * k * m * m)} = ${k * m}`; }
+    } else if (d < 70) {
+      label = 'Setze den Exponenten ein';
+      if (Math.random() < .5) {
+        const [w, ue] = pick([['Tausend', 3], ['Millionen', 6], ['Milliarden', 9]]), x = R(11, 999) / 10, k = Math.floor(Math.log10(x)), m = clean(x / 10 ** k);
+        q = `${fmt(x)} ${w} = ${fmt(m)} · 10<sup>?</sup>`; ans = ue + k; ex = `${w} = 10<sup>${ue}</sup>, das Komma wandert ${k} Stellen`;
+      } else {
+        const m = R(11, 99) / 10, e = -R(2, 6);
+        q = `${(m * 10 ** e).toFixed(-e + 1)} = ${fmt(m)} · 10<sup>?</sup>`; ans = e; ex = `Das Komma wandert ${-e} Stellen nach rechts, also 10<sup>${fmt(e)}</sup>`;
+      }
+    } else if (d < 85) {
+      const a = R(2, 6), b = R(2, 5), f = R(2, 3), g = R(2, 4), e = f * g;
+      q = `(${a} + ${a} · ${b}) − (−${e})² : ${f}²`; ans = a + a * b - g * g;
+      ex = `Klammer: ${a + a * b}. (−${e})² = ${e * e}, ${f}² = ${f * f}, ${e * e} : ${f * f} = ${g * g}`;
+    } else {
+      const v = R(1, 3);
+      if (v === 1) { const b = R(2, 3), c = R(2, 5); q = `(−${b})${sup(4)} − ${c} · (−${b})³`; ans = b ** 4 + c * b ** 3; ex = `(−${b})${sup(4)} = ${b ** 4}, (−${b})³ = ${fmt(-(b ** 3))}`; }
+      else if (v === 2) { const k = R(2, 9), p = R(2, 4); q = `0.${k}² · 10${sup(p)}`; ans = clean(k * k * 10 ** (p - 2)); ex = `0.${k}² = ${fmt(k * k / 100)}`; }
+      else { const k = R(2, 9), j = R(1, 5); q = `${rad(fmt(k * k / 100))} + 0.${j}²`; ans = clean(k / 10 + j * j / 100); ex = `${rad(fmt(k * k / 100))} = 0.${k}, 0.${j}² = ${fmt(j * j / 100)}`; }
+    }
+    return { label, q, ans, kind: 'num', ex };
+  }
+
+  // ---------- 2 Brüche ----------
+  function genBrueche(d) {
+    for (let t = 0; t < 200; t++) {
+      let q, ans, label = 'Berechne. Kürze vollständig.';
+      if (d < 20) { let [p, r] = F(R(1, 8), R(2, 9)); if (r === 1) continue; const k = R(2, 9); q = fr(p * k, r * k); ans = [p, r]; label = 'Kürze vollständig'; }
+      else if (d < 35) { const a = rf(6), b = rf(6); if (Math.random() < .5) { q = `${fh(a)} + ${fh(b)}`; ans = fa(a, b); } else { q = `${fh(a)} − ${fh(b)}`; ans = fs(a, b); } }
+      else if (d < 50) { const a = rf(10, true), b = rf(10); if (Math.random() < .5) { q = `${fh(a)} · ${fh(b)}`; ans = fm(a, b); } else { q = `${fh(a)} : ${fh(b)}`; ans = fd(a, b); } }
+      else if (d < 65) { const a = rf(8), b = rf(8, true), c = rf(8, true); q = `${fh(a)} − ${fh(b, true)} + ${fh(c, true)}`; ans = fa(fs(a, b), c); }
+      else if (d < 80) {
+        const a = rf(8, true), b = rf(8), c = rf(8, true);
+        if (Math.random() < .5) { q = `${fh(a)} + ${fh(b)} · ${fh(c, true)}`; ans = fa(a, fm(b, c)); }
+        else { q = `(${fh(a)} − ${fh(b)}) : ${fh(c, true)}`; ans = fd(fs(a, b), c); }
+      } else {
+        const a = rf(10, true), b = rf(10, true), c = rf(10, true);
+        label = 'Bestimme x. Kürze vollständig.';
+        if (Math.random() < .5) { const T = R(1, 3); q = `${fh(a)} + ${fh(b, true)} + x + ${fh(c, true)} = ${T}`; ans = fs(fs(fs(F(T), a), b), c); }
+        else { const T = sgn(); q = `${fh(a)} · ${fh(b, true)} · x · ${fh(c, true)} = ${fmt(T)}`; ans = fd(F(T), fm(fm(a, b), c)); }
+      }
+      if (ans[1] > 60 || Math.abs(ans[0]) > 200) continue;
+      return { label, q, ans, kind: 'frac', show: fh(ans), ex: 'Hauptnenner suchen, dann Zähler verrechnen und am Schluss kürzen' };
+    }
+  }
+
+  // ---------- 3 Masse und Prozent ----------
+  const U = {
+    mm: ['L', .001], cm: ['L', .01], dm: ['L', .1], m: ['L', 1], km: ['L', 1000],
+    g: ['M', 1], kg: ['M', 1000], t: ['M', 1e6],
+    ml: ['V', 1], 'cm³': ['V', 1], cl: ['V', 10], dl: ['V', 100], l: ['V', 1000], 'dm³': ['V', 1000], 'm³': ['V', 1e6],
+    'cm²': ['A', 1], 'dm²': ['A', 100], 'm²': ['A', 10000],
+    s: ['T', 1], min: ['T', 60], h: ['T', 3600]
+  };
+  const conv = (v, fu, tu) => clean(v * U[fu][1] / U[tu][1]);
+  function genMasse(d) {
+    if (d < 20) {
+      const [v, fu, tu] = pick([[R(2, 9), 'l', 'dl'], [R(2, 9), 'dl', 'cl'], [R(2, 30), 'cl', 'ml'], [R(2, 9) * 10, 'ml', 'cl'], [R(2, 9), 'm', 'cm'], [R(2, 9), 'kg', 'g'], [R(2, 5), 'h', 'min']]);
+      const f = U[fu][1] / U[tu][1];
+      return { label: `Umrechnen in ${tu}`, q: `${fmt(v)} ${fu}`, unit: tu, ans: conv(v, fu, tu), kind: 'num', ex: f >= 1 ? `1 ${fu} = ${fmt(f)} ${tu}` : `1 ${tu} = ${fmt(1 / f)} ${fu}` };
+    }
+    if (d < 40) {
+      if (Math.random() < .6) { const a = R(1, 9) / 2, b = R(1, 9) * 5, c = R(1, 30); return { label: 'Berechne', q: `${fmt(a)} l + ${b} cl + ${c} dl`, unit: 'dl', ans: clean(a * 10 + b / 10 + c), kind: 'num', ex: `${fmt(a)} l = ${fmt(a * 10)} dl, ${b} cl = ${fmt(b / 10)} dl` }; }
+      const a = R(1, 4), b = R(1, 9), c = R(1, 9) * 5; return { label: 'Berechne', q: `${a} m + ${b} dm + ${c} cm`, unit: 'cm', ans: a * 100 + b * 10 + c, kind: 'num', ex: `${a} m = ${a * 100} cm, ${b} dm = ${b * 10} cm` };
+    }
+    if (d < 55) {
+      const p = pick([5, 10, 15, 20, 25, 30, 35, 40, 45, 60, 75]);
+      const [v, fu, tu] = pick([[R(1, 4), 'h', 'min'], [R(2, 9), 'kg', 'g'], [R(1, 5), 'l', 'dl'], [R(2, 8), 'km', 'm']]);
+      const ans = clean(conv(v, fu, tu) * p / 100);
+      return { label: 'Berechne', q: `${p} % von ${v} ${fu}`, unit: tu, ans, kind: 'num', ex: `${v} ${fu} = ${fmt(conv(v, fu, tu))} ${tu}, davon ${p} % = ${fmt(ans)} ${tu}` };
+    }
+    if (d < 70) {
+      const v = R(1, 4); let l, r, a, b;
+      if (v === 1) {
+        const [u1, u2] = pick([['cl', 'cm³'], ['dl', 'ml'], ['l', 'dm³'], ['m', 'cm'], ['kg', 'g'], ['h', 'min'], ['dm³', 'cl']]);
+        const v1 = R(2, 60) / pick([1, 2, 10]), base = v1 * U[u1][1] * pick([1, 1, 10, .1, .5, 2]);
+        const v2 = clean(base / U[u2][1]); l = `${fmt(v1)} ${u1}`; r = `${fmt(v2)} ${u2}`; a = clean(v1 * U[u1][1]); b = clean(v2 * U[u2][1]);
+      } else if (v === 2) { const x = rf(12), y = rf(12); if (x[0] / x[1] === y[0] / y[1]) return genMasse(d); l = fh(x); r = fh(y); a = x[0] / x[1]; b = y[0] / y[1]; }
+      else if (v === 3) { const s = pick([[36, 81], [9, 16], [16, 9], [25, 144], [64, 36]]); if (Math.random() < .5) { l = `${rad(s[0])} + ${rad(s[1])}`; r = rad(`${s[0]} + ${s[1]}`); a = 2; b = 1; } else { l = `${rad(s[0])} · ${rad(s[1])}`; r = rad(`${s[0]} · ${s[1]}`); a = b = 1; } }
+      else { const x = R(2, 9), y = R(2, 9), m = R(2, 4), n = R(2, 4); if (x === y && m === n) return genMasse(d); l = `0.${x}${sup(m)}`; r = `0.${y}${sup(n)}`; a = (x / 10) ** m; b = (y / 10) ** n; }
+      const ans = Math.abs(a - b) < 1e-12 ? '=' : a < b ? '<' : '>';
+      return { label: 'Setze <, > oder = ein', q: `${l} <span style="color:var(--muted)">◯</span> ${r}`, ans, kind: 'choice', choices: ['<', '=', '>'], show: ans, ex: v === 3 ? 'Wurzeln einzeln ziehen, dann vergleichen' : 'Beide Seiten in dieselbe Einheit oder Form bringen' };
+    }
+    if (d < 85) {
+      if (Math.random() < .5) {
+        for (;;) {
+          const G = pick([200, 400, 250, 500, 150]), p = R(2, 15), ch = G * p / 100; if (ch % 1) continue;
+          const e = R(5, 25), a = e + ch;
+          return { label: 'Prozentrechnen', ctx: `Ein Verein hat zu Jahresbeginn ${G} Mitglieder. Im Lauf des Jahres treten ${e} Personen ein und ${a} Personen aus.`, q: 'Abnahme in Prozent?', unit: '%', ans: p, kind: 'num', ex: `Abnahme ${a} − ${e} = ${ch}; ${ch} von ${G} = ${p} %` };
+        }
+      }
+      const p = pick([5, 10, 15, 20, 25, 30, 40, 60, 75]), G = R(2, 30) * 20, W = clean(G * p / 100);
+      return { label: 'Prozentrechnen', ctx: `${p} % eines Betrags sind ${fmt(W)} CHF.`, q: 'Wie viel sind 100 %?', unit: 'CHF', ans: G, kind: 'num', ex: `${fmt(W)} : ${p} · 100 = ${G}` };
+    }
+    const v = R(1, 3);
+    if (v === 1) { const P = R(2, 20) * 50, a = pick([10, 20, 25, 50]), b = pick([10, 20, 25, 50]); const ans = clean(P * (1 + a / 100) * (1 - b / 100)); return { label: 'Prozentrechnen', ctx: `Ein Velo kostet ${P} CHF. Der Preis steigt zuerst um ${a} % und sinkt dann um ${b} %.`, q: 'Neuer Preis?', unit: 'CHF', ans, kind: 'num', ex: `${P} · ${fmt(1 + a / 100)} · ${fmt(1 - b / 100)} = ${fmt(ans)}` }; }
+    const [val, fu, tu] = v === 2 ? pick([[R(2, 9), 'm²', 'cm²'], [R(1, 19) * 500, 'cm²', 'm²'], [R(2, 9) / 2, 'm³', 'l'], [R(2, 9) * 250, 'cm³', 'l']]) : pick([[R(2, 9) * 15, 'min', 'h'], [R(2, 9) * 900, 's', 'h'], [R(2, 9) / 4, 'h', 's']]);
+    const f = U[fu][1] / U[tu][1];
+    return { label: `Umrechnen in ${tu}`, q: `${fmt(val)} ${fu}`, unit: tu, ans: conv(val, fu, tu), kind: 'num', ex: f >= 1 ? `1 ${fu} = ${fmt(f)} ${tu}` : `1 ${tu} = ${fmt(1 / f)} ${fu}` };
+  }
+
+  // ---------- 4 Terme ----------
+  function genTerme(d) {
+    const simp = { label: 'Vereinfache so weit wie möglich', kind: 'term', simplify: true };
+    if (d < 20) {
+      const a = R(-6, 12), b = R(-6, 12);
+      if (d >= 12 && Math.random() < .5) {
+        const r = R(-10, 20);
+        return { label: 'Bestimme b', q: `b − 3a = ${fmt(r)}`, ctx: `Es gilt a = ${fmt(a)}.`, ans: r + 3 * a, kind: 'num', ex: `b = ${fmt(r)} + 3 · ${par(a)}` };
+      }
+      const [t, f] = pick([['b − 3a', (a, b) => b - 3 * a], ['3b − (a + b)', (a, b) => 3 * b - (a + b)], ['2ab + b', (a, b) => 2 * a * b + b], ['b² − ab', (a, b) => b * b - a * b]]);
+      return { label: 'Setze ein und berechne', ctx: `a = ${fmt(a)} und b = ${fmt(b)}`, q: t, ans: f(a, b), kind: 'num', ex: 'Negative Zahlen beim Einsetzen in Klammern setzen' };
+    }
+    if (d < 35) {
+      for (;;) {
+        const c = [nz(-9, 9), nz(-9, 9), nz(-9, 9), nz(-9, 9)], A = c[0] + c[2], B = c[1] + c[3]; if (!A || !B) continue;
+        return { ...simp, q: poly([[c[0], 'a'], [c[1], 'b'], [c[2], 'a'], [c[3], 'b']]), vars: ['a', 'b'], f: e => A * e.a + B * e.b, maxTerms: 2, show: poly([[A, 'a'], [B, 'b']]), ex: 'Gleichartige Terme zusammenfassen: a mit a, b mit b' };
+      }
+    }
+    if (d < 50) {
+      for (;;) {
+        const p = nz(-5, 5), qq = nz(-5, 5), r = nz(-5, 5), s = nz(-5, 5), K = R(2, 5), sg = sgn(), A = p + sg * K * r, B = qq + sg * K * s;
+        if (!A && !B) continue;
+        return { ...simp, q: `(${poly([[p, 'a'], [qq, 'b']])}) ${sg < 0 ? '−' : '+'} ${K}(${poly([[r, 'a'], [s, 'b']])})`, vars: ['a', 'b'], f: e => A * e.a + B * e.b, maxTerms: (A ? 1 : 0) + (B ? 1 : 0), show: poly([[A, 'a'], [B, 'b']]), ex: `Ausmultiplizieren: ${sg < 0 ? '−' : ''}${K} · (${poly([[r, 'a'], [s, 'b']])}) = ${poly([[sg * K * r, 'a'], [sg * K * s, 'b']])}` };
+      }
+    }
+    if (d < 62) {
+      const v = R(1, 3);
+      if (v === 1) {
+        const r = R(2, 9) * sgn(), c2 = R(2, 9) * sgn(), c1 = r * c2, m = R(2, 4), p = R(1, m), n = R(1, 3), qq = R(1, n);
+        return { ...simp, q: `${poly([[c1, vp('a', m) + vp('b', n)]])} : (${poly([[c2, vp('a', p) + vp('b', qq)]])})`, vars: ['a', 'b'], f: e => r * e.a ** (m - p) * e.b ** (n - qq), maxTerms: 1, show: poly([[r, vp('a', m - p) + vp('b', n - qq)]]), ex: `Zahlen dividieren: ${fmt(c1)} : ${par(c2)} = ${fmt(r)}; Exponenten subtrahieren` };
+      }
+      if (v === 2) { const k = R(2, 6) * sgn(), i = R(1, 3); return { ...simp, q: `(${poly([[k, vp('a', i) + 'b']])})²`, vars: ['a', 'b'], f: e => k * k * e.a ** (2 * i) * e.b ** 2, maxTerms: 1, show: poly([[k * k, vp('a', 2 * i) + 'b²']]), ex: `Jeder Faktor wird quadriert: ${par(k)}² = ${k * k}` }; }
+      const c1 = R(2, 7) * sgn(), c2 = R(2, 7) * sgn();
+      return { ...simp, q: `${poly([[c1, 'x²']])} · (${poly([[c2, 'xy']])})`, vars: ['x', 'y'], f: e => c1 * c2 * e.x ** 3 * e.y, maxTerms: 1, show: poly([[c1 * c2, 'x³y']]), ex: 'Zahlen multiplizieren, Exponenten gleicher Variablen addieren' };
+    }
+    if (d < 75) {
+      if (Math.random() < .55) {
+        let p, qq; do { p = nz(-9, 9); qq = nz(-9, 9); } while (p + qq === 0);
+        return { ...simp, q: `(${lin(1, p)})(${lin(1, qq)})`, vars: ['x'], f: e => (e.x + p) * (e.x + qq), maxTerms: 3, show: poly([[1, 'x²'], [p + qq, 'x'], [p * qq, '']]), ex: 'Jedes Glied der ersten Klammer mit jedem Glied der zweiten multiplizieren' };
+      }
+      const a = R(1, 5), b = nz(-7, 7);
+      return { ...simp, q: `(${lin(a, b)})²`, vars: ['x'], f: e => (a * e.x + b) ** 2, maxTerms: 3, show: poly([[a * a, 'x²'], [2 * a * b, 'x'], [b * b, '']]), ex: `Binomische Formel: (${a === 1 ? '' : a}x)² ${b < 0 ? '−' : '+'} 2 · ${a === 1 ? '' : a}x · ${Math.abs(b)} + ${Math.abs(b)}²` };
+    }
+    if (d < 88) {
+      if (Math.random() < .5) {
+        const n = R(2, 12), k = R(n + 1, n + 8), m = k * k - n * n;
+        return { ...simp, label: 'Vereinfache (x ist positiv)', q: rad(`(${k}x)² − ${m}x²`), vars: ['x'], f: e => n * e.x, maxTerms: 1, show: `${n}x`, ex: `(${k}x)² = ${k * k}x², ${k * k}x² − ${m}x² = ${n * n}x², ${rad(n * n + 'x²')} = ${n}x` };
+      }
+      const f = pick([2, 3, 5, 6, 7]), t = R(2, 6);
+      return { ...simp, label: 'Vereinfache (x ist positiv)', q: `${rad(f)} · ${rad(f * t * t + 'x²')}`, vars: ['x'], f: e => f * t * e.x, maxTerms: 1, show: `${f * t}x`, ex: `${rad(f * f * t * t + 'x²')} = ${f * t}x` };
+    }
+    const a = R(2, 9), b = R(2, 9), dd = R(2, 9), k = R(2, 5), c = R(1, 6), C = F(a * k, b * dd);
+    return { ...simp, q: `${fr(`${a}x²`, `${b}(x + ${c})`)} : ${fr(`${dd}x`, `${k}x + ${k * c}`)}`, vars: ['x'], f: e => C[0] / C[1] * e.x, maxTerms: 1, allowParen: true,
+      show: C[1] === 1 ? poly([[C[0], 'x']]) : fr(poly([[C[0], 'x']]), C[1]), ex: `Mit dem Kehrwert multiplizieren; ${k}x + ${k * c} = ${k}(x + ${c}) kürzt sich weg` };
+  }
+
+  // ---------- 5 Gleichungen ----------
+  function genGleichung(d) {
+    for (let t = 0; t < 300; t++) {
+      let q, L, Rr;
+      if (d < 20) { const x0 = R(-9, 9), a = R(2, 9) * sgn(), b = nz(-20, 20); q = `${lin(a, b)} = ${fmt(a * x0 + b)}`; L = [F(a), F(b)]; Rr = [F(0), F(a * x0 + b)]; }
+      else if (d < 35) { const a = nz(-9, 9), c = nz(-9, 9), b = R(-15, 15), e = R(-15, 15); q = `${lin(a, b)} = ${lin(c, e)}`; L = [F(a), F(b)]; Rr = [F(c), F(e)]; }
+      else if (d < 50) {
+        const a = R(2, 6), b = nz(-6, 6), c = R(1, 12), k = R(2, 6), e = nz(-6, 6), f = R(-10, 10);
+        q = `${a}(${lin(1, b)}) − ${c} = ${k}(${lin(1, -e)})${f ? (f < 0 ? ' − ' : ' + ') + Math.abs(f) : ''}`; L = [F(a), F(a * b - c)]; Rr = [F(k), F(-k * e + f)];
+      } else if (d < 65) { const a = nz(-7, 7), b = nz(-9, 9), p = R(2, 6), c = nz(-4, 4), e = R(-9, 9); q = `${fr(lin(a, b), p)} = ${lin(c, e)}`; L = [F(a, p), F(b, p)]; Rr = [F(c), F(e)]; }
+      else if (d < 80) {
+        const a1 = R(1, 5), b1 = nz(-9, 9), p = R(2, 6), a2 = R(1, 5), b2 = nz(-9, 9), r = R(2, 6), c = R(-5, 5); if (p === r) continue;
+        q = `${fr(lin(a1, b1), p)} − ${fr(lin(a2, b2), r)} = ${fmt(c)}`; L = [fs(F(a1, p), F(a2, r)), fs(F(b1, p), F(b2, r))]; Rr = [F(0), F(c)];
+      } else {
+        const a1 = R(1, 9), b1 = nz(-9, 9), p = R(2, 7), a2 = R(1, 6), b2 = nz(-11, 11), r = R(2, 7), a3 = R(1, 5), b3 = nz(-9, 9), s = R(2, 6);
+        if (p === r) continue;
+        q = `${fr(lin(a1, b1), p)} − ${fr(lin(a2, b2), r)} = ${fr(lin(a3, b3), s)}`;
+        L = [fs(F(a1, p), F(a2, r)), fs(F(b1, p), F(b2, r))]; Rr = [F(a3, s), F(b3, s)];
+      }
+      const A = fs(L[0], Rr[0]); if (A[0] === 0) continue;
+      const sol = fd(fs(Rr[1], L[1]), A);
+      if (Math.abs(sol[0]) > 60 || sol[1] > 15) continue;
+      if (d >= 50 && sol[1] === 1 && t < 40) continue;
+      const den = d >= 50 ? ` Mit dem Hauptnenner multiplizieren, dann` : '';
+      return { label: 'Löse nach x auf (gekürzter Bruch)', q, ans: sol, kind: 'frac', show: fh(sol), ex: `${den} x-Terme auf eine Seite, Zahlen auf die andere → x = ${fh(sol)}` };
+    }
+    return genGleichung(10);
+  }
+
+  // ---------- 6 Teiler und Vielfache ----------
+  const divisors = n => { let c = 0; for (let i = 1; i <= n; i++) if (n % i === 0) c++; return c; };
+  function coprime(a, b) { let m, n; do { m = R(a, b); n = R(a, b); } while (m === n || gcd(m, n) !== 1); return [m, n]; }
+  function genTeiler(d) {
+    if (d < 20) { const g = R(2, 12), [m, n] = coprime(2, 9); return { label: 'Berechne den ggT', q: `ggT(${g * m}, ${g * n})`, ans: g, kind: 'num', ex: `${g * m} = ${g} · ${m}, ${g * n} = ${g} · ${n}` }; }
+    if (d < 35) { const a = R(4, 30), b = R(4, 30); if (a === b) return genTeiler(d); return { label: 'Berechne das kgV', q: `kgV(${a}, ${b})`, ans: lcm(a, b), kind: 'num', ex: `kgV = ${a} · ${b} : ggT = ${a * b} : ${gcd(a, b)}` }; }
+    if (d < 50) { const n = R(12, 100); return { label: 'Wie viele Teiler hat die Zahl?', q: String(n), ans: divisors(n), kind: 'num', ex: 'Teiler paarweise suchen: 1 und ' + n + ', 2 und …' }; }
+    if (d < 62) { const g = R(2, 14), [m, n] = coprime(2, 15); return { label: 'Berechne das kgV', q: `kgV(${g * m}, ${g * n})`, ans: g * m * n, kind: 'num', ex: `ggT = ${g}, kgV = ${g * m} · ${n}` }; }
+    if (d < 75) {
+      let n; do n = pick([2, 3, 5, 7]) ** R(1, 3) * pick([1, 3, 5, 7, 11]) ** R(1, 2) * pick([1, 1, 2, 3]); while (n > 2000 || n < 30);
+      return { label: 'Wie viele Teiler hat die Zahl?', q: String(n), ans: divisors(n), kind: 'num', ex: 'Primfaktoren mit Exponenten: Anzahl Teiler = Produkt der (Exponent + 1)' };
+    }
+    if (d < 88) {
+      const e = [R(1, 4), R(0, 3), R(0, 2), R(0, 1)], P = [2, 3, 5, 7], n = P.reduce((s, p, i) => s * p ** e[i], 1), i0 = pick([0, 1, 2].filter(i => e[i] > 0));
+      const parts = P.map((p, i) => e[i] === 0 ? null : i === i0 ? `${p}<sup>?</sup>` : p + sup(e[i])).filter(Boolean);
+      return { label: 'Setze den Exponenten ein', q: `${n} = ${parts.join(' · ')}`, ans: e[i0], kind: 'num', ex: `${n} = ${P.map((p, i) => e[i] ? p + sup(e[i]) : '').filter(Boolean).join(' · ')}` };
+    }
+    const A = R(1, 6) * 50, B = A + R(1, 4) * 50, p = pick([3, 4, 5, 6]);
+    let c = 0, txt;
+    if (Math.random() < .5) { for (let i = A; i <= B; i++) if (i % p === 0 && i % (2 * p)) c++; txt = `durch ${p}, aber nicht durch ${2 * p} teilbar`; }
+    else { const qq = pick([2, 3, 4, 5].filter(x => x !== p)); for (let i = A; i <= B; i++) if (i % p === 0 && i % qq === 0) c++; txt = `durch ${p} und durch ${qq} teilbar`; }
+    return { label: 'Zählen', ctx: `Zahlen von ${A} bis und mit ${B}`, q: `Wie viele sind ${txt}?`, ans: c, kind: 'num', ex: 'Erste passende Zahl suchen, dann in gleichen Abständen weiterzählen' };
+  }
+
+  // ---------- 7 Muster und Wahrscheinlichkeit ----------
+  function genMuster(d) {
+    if (d < 20) { const a = R(-5, 15), k = nz(-6, 9); return { label: 'Wie heisst die nächste Zahl?', q: `${[0, 1, 2, 3].map(i => fmt(a + i * k)).join(', ')}, …`, ans: a + 4 * k, kind: 'num', ex: `Die Zahlen ändern sich immer um ${fmt(k)}` }; }
+    const k = R(2, 6), c = R(-1, 6), ctx = `Mauer 1: ${k + c} Würfel · Mauer 2: ${2 * k + c} Würfel · Mauer 3: ${3 * k + c} Würfel`;
+    if (d < 35) { const N = R(6, 20); return { label: 'Würfelmauern', ctx, q: `Mauer ${N}?`, unit: 'Würfel', ans: k * N + c, kind: 'num', ex: `Pro Mauer kommen ${k} Würfel dazu: ${k} · ${N} ${c < 0 ? '−' : '+'} ${Math.abs(c)}` }; }
+    if (d < 50) return { label: 'Würfelmauern: Term für Mauer x', ctx, q: 'Mauer x?', kind: 'term', simplify: true, vars: ['x'], f: e => k * e.x + c, maxTerms: c ? 2 : 1, show: lin(k, c), ex: `Pro Mauer ${k} Würfel mehr, Mauer 0 hätte ${fmt(c)}` };
+    let ans, ctx2, q, ex;
+    if (d < 62) {
+      const A = R(1, 5) * 50, B = A + R(1, 4) * 50, p = pick([3, 4, 5]); let c = 0;
+      for (let i = A; i <= B; i++) if (i % p === 0 && i % (2 * p)) c++;
+      ans = F(c, B - A + 1); ctx2 = `Aus den Zahlen von ${A} bis und mit ${B} wird zufällig eine gezogen.`; q = `P(durch ${p}, aber nicht durch ${2 * p} teilbar)`; ex = `${c} günstige von ${B - A + 1} möglichen Zahlen`;
+    } else if (d < 75) {
+      let ds; do ds = [R(1, 9), R(1, 9), R(1, 9)]; while (new Set(ds).size < 3);
+      const perms = [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]].map(p => 100 * ds[p[0]] + 10 * ds[p[1]] + ds[p[2]]);
+      const [txt, fn] = pick([['durch 4 teilbar', n => n % 4 === 0], ['gerade', n => n % 2 === 0], ['grösser als 500', n => n > 500], ['durch 6 teilbar', n => n % 6 === 0]]);
+      const c = perms.filter(fn).length; if (c === 0 || c === 6) return genMuster(d);
+      ans = F(c, 6); ctx2 = `Aus den Ziffern ${ds.join(', ')} wird zufällig eine dreistellige Zahl gebildet. Jede Ziffer kommt genau einmal vor.`; q = `P(Zahl ist ${txt})`; ex = `6 mögliche Zahlen, davon ${c} passend: ${perms.filter(fn).join(', ')}`;
+    } else if (d < 88) {
+      const S = ['Stern', 'Herz', 'Mond'], wheel = n => { const c = [0, 0, 0]; for (let i = 0; i < n; i++) c[R(0, 2)]++; return c; };
+      let w1, w2, n1, n2, fav; do { n1 = R(3, 6); n2 = R(4, 8); w1 = wheel(n1); w2 = wheel(n2); fav = w1.reduce((s, c, i) => s + c * w2[i], 0); } while (!fav);
+      const desc = w => S.map((s, i) => w[i] ? `${w[i]}× ${s}` : '').filter(Boolean).join(', ');
+      ans = F(fav, n1 * n2); ctx2 = `Zwei Glücksräder mit gleich grossen Feldern werden je einmal gedreht. Rad 1: ${desc(w1)}. Rad 2: ${desc(w2)}.`; q = 'P(beide zeigen dasselbe Symbol)'; ex = `Für jedes Symbol P(Rad 1) · P(Rad 2), dann addieren: ${fav}/${n1 * n2}`;
+    } else {
+      if (Math.random() < .5) { const s = R(3, 11), c = 6 - Math.abs(s - 7); ans = F(c, 36); ctx2 = 'Zwei Spielwürfel werden geworfen.'; q = `P(Augensumme ${s})`; ex = `${c} von 36 Kombinationen`; }
+      else { const k = R(2, 5); let c = 0; for (let a = 1; a <= 6; a++) for (let b = 1; b <= 6; b++) if ((a * b) % k === 0) c++; ans = F(c, 36); ctx2 = 'Zwei Spielwürfel werden geworfen. Die Augenzahlen werden multipliziert.'; q = `P(Produkt durch ${k} teilbar)`; ex = `${c} von 36 Kombinationen`; }
+    }
+    return { label: 'Wahrscheinlichkeit als gekürzter Bruch', ctx: ctx2, q, ans, kind: 'frac', show: fh(ans), ex };
+  }
+
+  const TOPICS = {
+    rechnen: { name: 'Rechnen und Potenzen', ap: 'AP 2025 A1 · 2023 A1 · 2022 A1', gen: genRechnen },
+    brueche: { name: 'Brüche', ap: 'AP 2025 A1 · 2024 A1', gen: genBrueche },
+    masse: { name: 'Masse, Vergleiche, Prozent', ap: 'AP 2024 A1 · 2022 A1 und A4', gen: genMasse },
+    terme: { name: 'Terme', ap: 'A2 in jedem Jahr · 2024 A1 · 2023 A1', gen: genTerme },
+    gleichungen: { name: 'Gleichungen', ap: 'A3a in jedem Jahr', gen: genGleichung },
+    teiler: { name: 'Teiler und Vielfache', ap: 'AP 2025 A5', gen: genTeiler },
+    muster: { name: 'Muster und Wahrscheinlichkeit', ap: 'AP 2025 A6 · 2024 A5 · 2023 A5', gen: genMuster }
+  };
+
+  // ---------- Eingabe prüfen ----------
+  const norm = s => s.replace(/\s+/g, '').replace(/[·×*]/g, '*').replace(/:/g, '/').replace(/[−–]/g, '-').replace(/,/g, '.').replace(/²/g, '^2').replace(/³/g, '^3').replace(/['’]/g, '');
+  function parseExpr(src) {
+    const s = norm(src), toks = s.match(/\d+\.?\d*|\.\d+|[a-z]|[-+*/^()]/gi) || [];
+    if (!s || toks.join('') !== s) throw 0;
+    let i = 0; const peek = () => toks[i], next = () => toks[i++];
+    const expr = () => { let n = term(); while (peek() === '+' || peek() === '-') { const o = next(); n = { t: o, a: n, b: term() }; } return n; };
+    const term = () => { let n = unary(); for (;;) { const p = peek(); if (p === '*' || p === '/') { next(); n = { t: p, a: n, b: unary() }; } else if (p !== undefined && (p === '(' || /^[a-z\d.]/i.test(p))) n = { t: '*', a: n, b: power() }; else break; } return n; };
+    const unary = () => { if (peek() === '-') { next(); return { t: 'neg', a: unary() }; } if (peek() === '+') { next(); return unary(); } return power(); };
+    const power = () => { const b = atom(); if (peek() === '^') { next(); return { t: '^', a: b, b: unary() }; } return b; };
+    const atom = () => { const t = next(); if (t === undefined) throw 0; if (t === '(') { const e = expr(); if (next() !== ')') throw 0; return e; } if (/^[\d.]/.test(t)) return { t: 'n', v: parseFloat(t) }; if (/^[a-z]$/i.test(t)) return { t: 'v', n: t.toLowerCase() }; throw 0; };
+    const r = expr(); if (i !== toks.length) throw 0; return r;
+  }
+  const ev = (n, e) => { switch (n.t) { case 'n': return n.v; case 'v': return e[n.n]; case 'neg': return -ev(n.a, e); case '+': return ev(n.a, e) + ev(n.b, e); case '-': return ev(n.a, e) - ev(n.b, e); case '*': return ev(n.a, e) * ev(n.b, e); case '/': return ev(n.a, e) / ev(n.b, e); case '^': return ev(n.a, e) ** ev(n.b, e); } };
+  const addTerms = n => n.t === '+' || n.t === '-' ? addTerms(n.a) + addTerms(n.b) : n.t === 'neg' ? addTerms(n.a) : 1;
+  const varsOf = (n, s = new Set()) => { if (n.t === 'v') s.add(n.n); if (n.a) varsOf(n.a, s); if (n.b) varsOf(n.b, s); return s; };
+  const close = (u, v) => Math.abs(u - v) <= 1e-7 * Math.max(1, Math.abs(v));
+
+  function check(raw) {
+    if (item.kind === 'choice') return { ok: raw === item.ans };
+    if (item.kind === 'num' || item.kind === 'frac') {
+      const s = norm(raw);
+      if (item.kind === 'frac') {
+        if (/^-?\d*\.\d+$/.test(s)) return { invalid: 'Gib das Ergebnis als Bruch an, zum Beispiel 3/4.' };
+        const m = s.match(/^(-?\d+)(?:\/(-?\d+))?$/); if (!m || m[2] === '0' || m[2] === '-0') return { invalid: 'Gib einen Bruch ein, zum Beispiel 3/4 oder −5/2.' };
+        const n = +m[1], dn = m[2] ? +m[2] : 1, r = F(n, dn), eq = r[0] === item.ans[0] && r[1] === item.ans[1];
+        if (eq && Math.abs(n) !== Math.abs(r[0])) return { ok: false, msg: 'Der Wert stimmt, aber der Bruch ist nicht vollständig gekürzt.' };
+        return { ok: eq };
+      }
+      const m = s.match(/^(-?\d*\.?\d+)(?:\/(-?\d+))?$/); if (!m) return { invalid: 'Bitte eine Zahl eingeben.' };
+      const v = m[2] ? +m[1] / +m[2] : +m[1];
+      return { ok: close(v, item.ans) };
+    }
+    let ast; try { ast = parseExpr(raw); } catch (e) { return { invalid: 'Diesen Term kann ich nicht lesen. Beispiel: 3x^2 − 5x + 2' }; }
+    const extra = [...varsOf(ast)].filter(v => !item.vars.includes(v));
+    if (extra.length) return { invalid: `Verwende nur ${item.vars.join(' und ')} als Variable.` };
+    for (let k = 0; k < 8; k++) {
+      const env = {}; for (const v of item.vars) env[v] = 0.37 + Math.random() * 3;
+      const want = item.f(env), got = ev(ast, env);
+      if (!Number.isFinite(want)) continue;
+      if (!Number.isFinite(got) || !close(got, want)) return { ok: false };
+    }
+    if (item.simplify && ((!item.allowParen && /\(/.test(raw)) || addTerms(ast) > item.maxTerms)) return { ok: false, msg: 'Der Term ist gleichwertig, aber noch nicht vollständig vereinfacht.' };
+    return { ok: true };
+  }
+
+  // ---------- Speicher ----------
+  const KEY = 'kantitrainer.v1', GOAL = 30, ROUND = 20, SCALE = 8;
+  const fresh = () => ({ topics: Object.fromEntries(Object.keys(TOPICS).map(k => [k, { theta: 20, n: 0 }])), xp: 0, days: {}, dayStreak: 0, lastGoalDay: '' });
+  let state;
+  try { state = JSON.parse(localStorage.getItem(KEY)) || fresh(); } catch (e) { state = fresh(); }
+  for (const k in TOPICS) state.topics[k] = state.topics[k] || { theta: 20, n: 0 };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { } };
+  const dayKey = (o = 0) => { const t = new Date(Date.now() + o * 864e5); return `${t.getFullYear()}-${t.getMonth() + 1}-${t.getDate()}`; };
+
+  // ---------- Adaptives Modell (Elo / Rasch-ähnlich) ----------
+  // P(richtig) = 1 / (1 + e^-((Können - Schwierigkeit) / SCALE)); Ziel: etwa 80 % richtig
+  const prob = (th, d) => 1 / (1 + Math.exp(-(th - d) / SCALE));
+  const stufe = th => clamp(Math.floor(th / 10) + 1, 1, 10);
+  const level = xp => Math.floor(Math.sqrt(xp / 50)) + 1;
+
+  let sess = null, item = null, shownAt = 0, awaitingNext = false, breakShown = false;
+
+  function startSession(mode) {
+    sess = { mode, count: 0, rightRun: 0, wrongRun: 0, log: [], xp: 0, start: Date.now(), startTheta: {}, touched: new Set(), roundPending: false };
+    for (const k in TOPICS) sess.startTheta[k] = state.topics[k].theta;
+    $('home').hidden = true; $('play').hidden = false; $('roundEnd').hidden = true; $('taskArea').hidden = false;
+    nextItem();
+  }
+
+  function nextItem() {
+    awaitingNext = false;
+    const keys = Object.keys(TOPICS);
+    const tk = sess.mode === 'mix' ? keys[(sess.count * 3) % keys.length] : sess.mode;
+    const t = state.topics[tk];
+    let p = 0.8, challenge = false;
+    if (sess.wrongRun >= 2) p = 0.92;            // Frust vermeiden
+    else if (sess.rightRun >= 5) p = 0.72;       // Langeweile vermeiden
+    if (sess.count % 7 === 6 && sess.wrongRun === 0) { p = 0.55; challenge = true; }
+    p = clamp(p + (Math.random() - .5) * .08, .5, .95);
+    const d = clamp(t.theta - SCALE * Math.log(p / (1 - p)), 0, 100);
+    item = Object.assign(TOPICS[tk].gen(d), { d, p: prob(t.theta, d), topic: tk, challenge });
+    sess.touched.add(tk);
+    renderItem();
+  }
+
+  function submit(raw) {
+    if (awaitingNext) { if (!sess.roundPending) nextItem(); return; }
+    const res = check(raw);
+    if (res.invalid) { $('feedback').innerHTML = `<span class="ex">${res.invalid}</span>`; return; }
+    const ok = res.ok;
+    const secs = (Date.now() - shownAt) / 1000;
+    const t = state.topics[item.topic];
+    // Schnell und richtig = 1, langsam und richtig sinkt bis 0.85, falsch = 0
+    const expT = 6 + item.d * 0.25;
+    const score = ok ? (secs <= expT ? 1 : Math.max(0.85, 1 - 0.15 * (secs - expT) / (2 * expT))) : 0;
+    const K = t.n < 6 ? 14 : Math.max(3, 10 / Math.sqrt(1 + (t.n - 6) / 10));
+    const before = stufe(t.theta);
+    t.theta = clamp(t.theta + K * (score - item.p), 0, 105);
+    t.n++;
+    const after = stufe(t.theta);
+
+    sess.count++;
+    let gained = 0;
+    if (ok) { sess.rightRun++; sess.wrongRun = 0; gained = Math.round(5 + item.d / 8) * (item.challenge ? 2 : 1) + Math.min(sess.rightRun - 1, 10); }
+    else { sess.wrongRun++; sess.rightRun = 0; }
+    state.xp += gained; sess.xp += gained;
+    sess.log.push({ d: item.d, ok, th: t.theta });
+
+    const today = dayKey();
+    state.days = { [today]: (state.days[today] || 0) + 1 };
+    if (state.days[today] >= GOAL && state.lastGoalDay !== today) {
+      state.dayStreak = state.lastGoalDay === dayKey(-1) ? state.dayStreak + 1 : 1;
+      state.lastGoalDay = today;
+    }
+    save();
+
+    const card = $('taskCard');
+    card.classList.remove('shake', 'pop'); void card.offsetWidth;
+    if (ok) {
+      card.classList.add('pop');
+      $('feedback').innerHTML = `<span class="ok">Richtig. +${gained} XP${sess.rightRun >= 3 ? ` · ${sess.rightRun} in Folge` : ''}.${after > before ? ` Stufe ${after} erreicht.` : ''}</span>`;
+    } else {
+      card.classList.add('shake');
+      const sol = item.show !== undefined ? item.show : fmt(item.ans);
+      $('feedback').innerHTML = `${res.msg ? `<span class="bad">${res.msg}</span><br>` : ''}<span class="bad">Richtig wäre: ${sol}${item.unit ? ' ' + item.unit : ''}</span><br><span class="ex">${item.ex || ''}</span>`;
+    }
+    renderStats(); renderSide(); renderProgress(true);
+    lockInput();
+
+    if (!breakShown && Date.now() - sess.start > 20 * 60 * 1000) { breakShown = true; $('breakBanner').hidden = false; }
+    awaitingNext = true;
+    if (sess.count % ROUND === 0) { sess.roundPending = true; $('ansBtn').disabled = true; setTimeout(roundEnd, ok ? 900 : 3000); return; }
+    if (ok) setTimeout(() => { if (awaitingNext && !$('play').hidden) nextItem(); }, 900);
+    else { $('ansBtn').disabled = false; $('ansBtn').textContent = 'Weiter'; if (item.kind === 'choice') { $('ansForm').hidden = false; $('ansForm').querySelector('.field').hidden = true; } $('ansBtn').focus(); }
+  }
+
+  function lockInput() {
+    $('ansInput').disabled = true;
+    $('choiceRow').querySelectorAll('button').forEach(b => b.disabled = true);
+    $('chipRow').querySelectorAll('button').forEach(b => b.disabled = true);
+  }
+
+  function roundEnd() {
+    awaitingNext = false; sess.roundPending = false;
+    const last = sess.log.slice(-ROUND), acc = Math.round(100 * last.filter(x => x.ok).length / last.length);
+    const rows = [...sess.touched].map(k => {
+      const a = stufe(sess.startTheta[k]), b = stufe(state.topics[k].theta);
+      return `<div><span class="label">${TOPICS[k].name}</span><div class="v">${a === b ? 'Stufe ' + b : a + ' → ' + b}</div></div>`;
+    }).join('');
+    $('taskArea').hidden = true;
+    const re = $('roundEnd'); re.hidden = false;
+    re.innerHTML = `<div class="task" style="padding-bottom:0"><span class="label">Runde ${sess.count / ROUND} geschafft</span><h2 style="font-size:32px">${acc >= 70 && acc <= 90 ? 'Genau im Flow.' : acc > 90 ? 'Zu leicht für dich. Es wird schwerer.' : 'Anspruchsvolle Runde. Es wird leichter.'}</h2></div>
+      <div class="summary"><div><span class="label">Treffer</span><div class="v">${acc} %</div></div><div><span class="label">XP</span><div class="v">+${sess.xp}</div></div>${rows}</div>
+      <div class="actions"><button class="btn" id="moreBtn" type="button">Noch eine Runde</button><button class="btn ghost" id="homeBtn" type="button">Themenwahl</button></div>`;
+    sess.xp = 0; sess.touched = new Set();
+    for (const k in TOPICS) sess.startTheta[k] = state.topics[k].theta;
+    $('moreBtn').onclick = () => { re.hidden = true; $('taskArea').hidden = false; nextItem(); };
+    $('homeBtn').onclick = goHome;
+    $('moreBtn').focus();
+  }
+
+  // ---------- Darstellung ----------
+  function insert(txt) {
+    const i = $('ansInput'), s = i.selectionStart ?? i.value.length, e = i.selectionEnd ?? s;
+    i.setRangeText(txt, s, e, 'end'); i.focus();
+  }
+  function renderItem() {
+    $('tTopic').textContent = `${TOPICS[item.topic].name} · Stufe ${stufe(state.topics[item.topic].theta)}`;
+    $('tPills').innerHTML = item.challenge ? '<span class="pill challenge">Herausforderung · doppelte XP</span>' : '';
+    $('tLabel').textContent = item.label;
+    $('tCtx').hidden = !item.ctx; $('tCtx').textContent = item.ctx || '';
+    $('tQ').innerHTML = item.q;
+    $('tUnit').textContent = item.unit || '';
+    const choice = item.kind === 'choice';
+    $('ansForm').hidden = choice; $('ansForm').querySelector('.field').hidden = false;
+    $('choiceRow').hidden = !choice;
+    $('choiceRow').innerHTML = choice ? item.choices.map(c => `<button class="btn ghost" type="button" data-v="${c}">${c}</button>`).join('') : '';
+    $('choiceRow').querySelectorAll('button').forEach(b => b.onclick = () => submit(b.dataset.v));
+    const chips = item.kind === 'term' ? [...item.vars, '²', '^', '(', ')', '/', '−'] : item.kind === 'frac' ? ['/', '−'] : choice ? [] : ['−'];
+    $('chipRow').innerHTML = chips.map(c => `<button class="chip" type="button" data-v="${c}">${c}</button>`).join('');
+    $('chipRow').querySelectorAll('button').forEach(b => { b.onmousedown = e => e.preventDefault(); b.onclick = () => insert(b.dataset.v); });
+    const inp = $('ansInput');
+    inp.value = ''; inp.disabled = false; inp.inputMode = item.kind === 'num' ? 'decimal' : 'text';
+    inp.placeholder = item.kind === 'frac' ? 'z. B. −7/4' : item.kind === 'term' ? 'z. B. 3x^2 − 5x' : '';
+    $('ansBtn').disabled = false; $('ansBtn').textContent = 'Prüfen';
+    $('feedback').innerHTML = '';
+    renderProgress(false);
+    if (!choice) inp.focus();
+    shownAt = Date.now();
+  }
+
+  function renderProgress(answered) {
+    const inRound = answered ? ((sess.count - 1) % ROUND) + 1 : sess.count % ROUND;
+    const last = inRound ? sess.log.slice(-inRound) : [];
+    let h = '';
+    for (let i = 0; i < ROUND; i++) {
+      if (i < last.length) h += `<i class="${last[i].ok ? 'ok' : 'bad'}"></i>`;
+      else if (i === last.length && !answered) h += '<i class="now"></i>';
+      else h += '<i></i>';
+    }
+    $('tProgress').innerHTML = h;
+  }
+
+  function renderSide() {
+    const last = sess.log.slice(-10), pill = $('zonePill');
+    if (last.length < 5) { pill.className = 'pill'; pill.textContent = 'Messung läuft'; $('gMark').style.left = '80%'; }
+    else {
+      const acc = last.filter(x => x.ok).length / last.length;
+      $('gMark').style.left = (acc * 100) + '%';
+      if (acc > .9) { pill.className = 'pill easy'; pill.textContent = 'Zu leicht · wird schwerer'; }
+      else if (acc < .7) { pill.className = 'pill hard'; pill.textContent = 'Zu schwer · wird leichter'; }
+      else { pill.className = 'pill flow'; pill.textContent = 'Im Flow'; }
+    }
+    const N = 24, L = sess.log.slice(-N), x0 = 44, w = 330 - x0 - 4, y = v => 110 - v, bw = w / N;
+    let s = '';
+    for (const g of [0, 30, 60, 90]) s += `<line x1="${x0}" x2="326" y1="${y(g)}" y2="${y(g)}" stroke="var(--line)" stroke-width="1"></line><text x="${x0 - 6}" y="${y(g) + 4}" text-anchor="end" font-size="10" fill="var(--muted)" font-family="Atkinson Hyperlegible, sans-serif">Stufe ${stufe(g)}</text>`;
+    L.forEach((e, i) => { const h = Math.max(2, e.d); s += `<rect x="${x0 + i * bw + 1.5}" y="${y(h)}" width="${bw - 3}" height="${h}" rx="2" fill="${e.ok ? 'var(--ok)' : 'var(--bad)'}" opacity=".85"></rect>`; });
+    if (L.length > 1) s += `<polyline fill="none" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round" points="${L.map((e, i) => `${x0 + i * bw + bw / 2},${y(clamp(e.th, 0, 100))}`).join(' ')}"></polyline>`;
+    if (L.length) { const e = L[L.length - 1]; s += `<circle cx="${x0 + (L.length - 1) * bw + bw / 2}" cy="${y(clamp(e.th, 0, 100))}" r="3.5" fill="var(--ink)"></circle>`; }
+    else s += `<text x="${x0 + w / 2}" y="60" text-anchor="middle" font-size="12" fill="var(--muted)" font-family="Atkinson Hyperlegible, sans-serif">Erscheint nach der ersten Antwort</text>`;
+    $('chart').innerHTML = s;
+  }
+
+  function renderStats() {
+    $('sXp').textContent = state.xp;
+    $('sLevel').textContent = level(state.xp);
+    const today = state.days[dayKey()] || 0;
+    $('sDays').textContent = (state.lastGoalDay === dayKey() || state.lastGoalDay === dayKey(-1)) ? state.dayStreak : 0;
+    $('ringArc').setAttribute('stroke-dashoffset', 113.1 * (1 - Math.min(1, today / GOAL)));
+    $('ringTxt').textContent = Math.min(today, 99);
+  }
+
+  function renderHome() {
+    let h = '';
+    for (const k in TOPICS) {
+      const t = state.topics[k], st = stufe(t.theta), within = st === 10 ? 100 : (t.theta % 10) * 10;
+      h += `<button class="topic" type="button" data-mode="${k}">
+        <span class="ap">${TOPICS[k].ap}</span><h3>${TOPICS[k].name}</h3>
+        <div class="row"><span class="stufe">Stufe ${st} von 10</span><span class="note">${t.n} ${t.n === 1 ? 'Aufgabe' : 'Aufgaben'}</span></div>
+        <div class="bar"><i style="width:${within}%"></i></div></button>`;
+    }
+    h += `<button class="topic mix" type="button" data-mode="mix"><span class="ap">Alle Themen</span><h3>Prüfungsmix</h3>
+      <span>Alle sieben Themen im Wechsel. Jedes Thema behält seine eigene Stufe.</span></button>`;
+    $('topicList').innerHTML = h;
+    $('topicList').querySelectorAll('.topic').forEach(b => b.onclick = () => startSession(b.dataset.mode));
+  }
+
+  function goHome() { $('play').hidden = true; $('home').hidden = false; $('breakBanner').hidden = true; renderHome(); renderStats(); }
+
+  $('ansForm').addEventListener('submit', e => { e.preventDefault(); submit($('ansInput').value); });
+  document.addEventListener('keydown', e => { if (e.key === 'Enter' && awaitingNext && sess && !sess.roundPending && !$('play').hidden && $('roundEnd').hidden && document.activeElement !== $('ansBtn')) { e.preventDefault(); nextItem(); } });
+  $('quitBtn').onclick = goHome;
+  $('breakOk').onclick = () => { $('breakBanner').hidden = true; $('ansInput').focus(); };
+  const onReset = () => {
+    const row = $('resetRow'), html = row.innerHTML;
+    row.innerHTML = '<span>Alle Stufen, XP und Tage löschen?</span><button class="linkbtn danger" id="resetYes" type="button">Ja, löschen</button><button class="linkbtn" id="resetNo" type="button">Abbrechen</button>';
+    const restore = () => { row.innerHTML = html; $('resetBtn').onclick = onReset; renderHome(); renderStats(); };
+    $('resetYes').onclick = () => { state = fresh(); save(); restore(); };
+    $('resetNo').onclick = restore;
+  };
+  $('resetBtn').onclick = onReset;
+
+  // Testzugang für automatische Prüfungen
+  window.__kt = { TOPICS, check: (it, raw) => { item = it; return check(raw); } };
+
+  renderHome(); renderStats();
+})();
+</script>
