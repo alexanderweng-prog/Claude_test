@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="de-CH">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flow-Trainer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: eine App-Fläche; Start = Themenwahl, Training = Aufgabe links, Flow-Messung rechts (mobil darunter) */
+:root {
+  --bg: #EDF1ED; --surface: #FFFFFF; --ink: #18221F; --muted: #56645E; --line: #D3DBD5;
+  --accent: #2343C4; --accent-ink: #FFFFFF; --flow: #E6A13A; --flow-soft: #F6E3C2;
+  --ok: #1D8455; --bad: #C23E2D;
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111715; --surface: #1A221F; --ink: #E6EDE9; --muted: #98A69F; --line: #2B3632;
+  --accent: #8FA5FF; --accent-ink: #0E1430; --flow: #E8B159; --flow-soft: #3A3121;
+  --ok: #5CC690; --bad: #F07966; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111715; --surface: #1A221F; --ink: #E6EDE9; --muted: #98A69F; --line: #2B3632;
+  --accent: #8FA5FF; --accent-ink: #0E1430; --flow: #E8B159; --flow-soft: #3A3121;
+  --ok: #5CC690; --bad: #F07966; color-scheme: dark }
+
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.5; }
+.wrap { max-width: 1000px; margin: 0 auto; padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 20px; }
+h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; line-height: 1.15; }
+button { font: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--flow); outline-offset: 2px; }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.label { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+
+/* Kopfzeile */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { display: flex; align-items: baseline; gap: 10px; }
+.brand h1 { font-size: 28px; font-weight: 800; letter-spacing: -.02em; }
+.brand h1 b { color: var(--accent); font-weight: 800; }
+.stats { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; align-items: flex-end; }
+.stat .v { font-family: var(--f-mono); font-weight: 700; font-size: 18px; font-variant-numeric: tabular-nums; }
+.ring { width: 44px; height: 44px; }
+
+/* Start */
+.intro { max-width: 62ch; color: var(--muted); margin: 0; }
+.topics { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+.topic { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px;
+  display: flex; flex-direction: column; gap: 10px; text-align: left; color: var(--ink); transition: transform .15s, border-color .15s; }
+.topic:hover { border-color: var(--accent); transform: translateY(-2px); }
+.topic h3 { font-size: 21px; font-weight: 800; }
+.topic .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.stufe { font-family: var(--f-mono); font-weight: 700; font-size: 15px; }
+.bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+.topic.mix { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.topic.mix .label { color: var(--accent-ink); opacity: .8; }
+.how { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 28px; border-top: 1px solid var(--line); padding-top: 18px; }
+.how p { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
+.foot { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+.linkbtn { background: none; border: 0; color: var(--muted); text-decoration: underline; padding: 0; }
+.linkbtn.danger { color: var(--bad); }
+
+/* Training */
+.play { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 780px) { .play { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; min-width: 0; }
+.taskhead { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pill { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.pill.challenge { background: var(--flow); color: #2A1A00; border-color: var(--flow); }
+.progress { display: flex; gap: 4px; margin-top: 14px; }
+.progress i { flex: 1; height: 5px; border-radius: 3px; background: var(--line); }
+.progress i.ok { background: var(--ok); } .progress i.bad { background: var(--bad); } .progress i.now { background: var(--ink); }
+.task { padding-block: 34px 22px; display: flex; flex-direction: column; gap: 8px; }
+.task .q { font-family: var(--f-mono); font-weight: 700; font-size: clamp(30px, 7vw, 54px); line-height: 1.1; overflow-wrap: anywhere; }
+.answer { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+.field { flex: 1 1 200px; display: flex; align-items: center; border: 2px solid var(--line); border-radius: 12px; background: var(--bg); min-width: 0; }
+.field:focus-within { border-color: var(--accent); }
+.field input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink); font-family: var(--f-mono); font-size: 26px; font-weight: 700; padding: 12px 14px; outline: none; }
+.field .unit { padding-right: 14px; font-family: var(--f-mono); font-size: 20px; color: var(--muted); }
+.btn { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 12px; padding: 12px 22px; font-weight: 700; font-size: 17px; }
+.btn.ghost { background: transparent; color: var(--ink); border: 2px solid var(--line); }
+.feedback { min-height: 56px; margin-top: 14px; font-size: 16px; }
+.feedback .ok { color: var(--ok); font-weight: 700; } .feedback .bad { color: var(--bad); font-weight: 700; }
+.feedback .ex { color: var(--muted); font-family: var(--f-mono); font-size: 14px; }
+.shake { animation: shake .3s; } .pop { animation: pop .35s; }
+@keyframes shake { 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+@keyframes pop { 50% { transform: scale(1.04) } }
+@media (prefers-reduced-motion: reduce) { .shake, .pop { animation: none } .topic { transition: none } }
+
+.side { display: flex; flex-direction: column; gap: 16px; }
+.zone { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.zone .pill.flow { background: var(--flow-soft); border-color: var(--flow); color: var(--ink); }
+.zone .pill.easy, .zone .pill.hard { color: var(--ink); }
+.gauge { position: relative; height: 14px; border-radius: 7px; background: var(--line); margin-top: 10px; }
+.gauge .band { position: absolute; top: 0; bottom: 0; left: 70%; width: 20%; background: var(--flow); opacity: .55; border-radius: 3px; }
+.gauge .mark { position: absolute; top: -4px; width: 4px; height: 22px; background: var(--ink); border-radius: 2px; transform: translateX(-2px); transition: left .4s; }
+.gscale { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 4px; }
+.chart svg { width: 100%; height: auto; display: block; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin-top: 6px; }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; background: var(--c); }
+.note { font-size: 14px; color: var(--muted); margin: 0; }
+.banner { background: var(--flow-soft); border: 1px solid var(--flow); border-radius: 12px; padding: 12px 16px; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+
+/* Rundenende */
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-block: 18px; }
+.summary div { border-top: 2px solid var(--line); padding-top: 8px; }
+.summary .v { font-family: var(--f-mono); font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><h1>Flow<b>-</b>Trainer</h1></div>
+    <div class="stats">
+      <div class="stat"><span class="label">Level</span><span class="v" id="sLevel">1</span></div>
+      <div class="stat"><span class="label">XP</span><span class="v" id="sXp">0</span></div>
+      <div class="stat"><span class="label">Tage in Folge</span><span class="v" id="sDays">0</span></div>
+      <svg class="ring" viewBox="0 0 44 44" aria-label="Tagesziel">
+        <circle cx="22" cy="22" r="18" fill="none" stroke="var(--line)" stroke-width="5"></circle>
+        <circle id="ringArc" cx="22" cy="22" r="18" fill="none" stroke="var(--flow)" stroke-width="5" stroke-linecap="round" transform="rotate(-90 22 22)" stroke-dasharray="113.1" stroke-dashoffset="113.1"></circle>
+        <text id="ringTxt" x="22" y="26" text-anchor="middle" font-size="11" font-family="JetBrains Mono, monospace" font-weight="700" fill="var(--ink)">0</text>
+      </svg>
+    </div>
+  </header>
+
+  <!-- Start -->
+  <section id="home" class="wrap" style="padding:0">
+    <p class="intro">Wähle ein Thema. Die Aufgaben passen sich nach jeder Antwort an: Du löst etwa 4 von 5 richtig. Das ist schwer genug, um etwas zu lernen, und leicht genug, um dranzubleiben.</p>
+    <div class="topics" id="topicList"></div>
+    <div class="how">
+      <div><span class="label">Schwierigkeit</span><p>Jede Antwort verändert deine Stufe. Schnell und richtig zählt mehr als langsam und richtig.</p></div>
+      <div><span class="label">Hilfe bei Fehlern</span><p>Zwei Fehler hintereinander: Die nächste Aufgabe wird deutlich leichter.</p></div>
+      <div><span class="label">Herausforderung</span><p>Jede 7. Aufgabe ist schwerer als üblich und gibt doppelte XP.</p></div>
+    </div>
+    <div class="foot" id="resetRow">
+      <span>Tagesziel: 30 Aufgaben. Der Fortschritt bleibt nur in diesem Browser gespeichert.</span>
+      <button class="linkbtn" id="resetBtn" type="button">Fortschritt zurücksetzen</button>
+    </div>
+  </section>
+
+  <!-- Training -->
+  <section id="play" hidden>
+    <div id="breakBanner" class="banner" hidden style="margin-bottom:16px">
+      <span>Du trainierst seit 20 Minuten. Eine kurze Pause hilft beim Behalten.</span>
+      <button class="btn ghost" id="breakOk" type="button">Weiter trainieren</button>
+    </div>
+    <div class="play">
+      <div class="card" id="taskCard">
+        <div class="taskhead">
+          <span class="label" id="tTopic">Thema</span>
+          <span id="tPills"></span>
+        </div>
+        <div class="progress" id="tProgress"></div>
+        <div id="taskArea">
+          <div class="task">
+            <span class="label" id="tLabel">Rechne</span>
+            <div class="q" id="tQ">7 + 5</div>
+          </div>
+          <form class="answer" id="ansForm" autocomplete="off">
+            <label class="field" for="ansInput">
+              <input id="ansInput" type="text" inputmode="decimal" aria-label="Deine Antwort" spellcheck="false">
+              <span class="unit" id="tUnit"></span>
+            </label>
+            <button class="btn" id="ansBtn" type="submit">Prüfen</button>
+          </form>
+          <div class="feedback" id="feedback" aria-live="polite"></div>
+        </div>
+        <div id="roundEnd" hidden></div>
+        <div class="foot" style="margin-top:8px"><button class="linkbtn" id="quitBtn" type="button">Zur Themenwahl</button><span>Enter = Prüfen / Weiter</span></div>
+      </div>
+
+      <aside class="side">
+        <div class="card">
+          <div class="zone"><span class="label">Trefferquote (letzte 10)</span><span class="pill" id="zonePill">Messung läuft</span></div>
+          <div class="gauge"><div class="band"></div><div class="mark" id="gMark" style="left:80%"></div></div>
+          <div class="gscale"><span>0 %</span><span>Flow-Zone 70–90 %</span><span>100 %</span></div>
+        </div>
+        <div class="card chart">
+          <span class="label">Aufgaben und Können</span>
+          <svg id="chart" viewBox="0 0 330 120" role="img" aria-label="Schwierigkeit der Aufgaben und deine Stufe"></svg>
+          <div class="legend">
+            <span style="--c:var(--ok)">richtig</span><span style="--c:var(--bad)">falsch</span><span style="--c:var(--ink)">deine Stufe</span>
+          </div>
+          <p class="note" id="chartNote" style="margin-top:8px">Die Säulen zeigen, wie schwer jede Aufgabe war. Sie liegen absichtlich knapp unter deiner Stufe.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  // ---------- Hilfsfunktionen ----------
+  const $ = id => document.getElementById(id);
+  const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+  const clean = x => Math.round(x * 1e9) / 1e9;
+  const fmt = x => { const r = clean(x); return r < 0 ? '−' + String(-r) : String(r); };
+  const par = x => x < 0 ? '(' + fmt(x) + ')' : fmt(x);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  // ---------- Aufgabengeneratoren: d = Schwierigkeit 0–100 ----------
+  function genRechnen(d) {
+    let q, ans, ex = '', im = 'decimal';
+    if (d < 12) { const a = R(1, 10), b = R(1, 10); q = `${a} + ${b}`; ans = a + b; }
+    else if (d < 22) {
+      if (Math.random() < .5) { const a = R(11, 20), b = R(2, a - 1); q = `${a} − ${b}`; ans = a - b; }
+      else { const a = R(5, 9), b = R(11 - a, 9); q = `${a} + ${b}`; ans = a + b; ex = `Über den Zehner: ${a} + ${10 - a} = 10, dann + ${b - (10 - a)}`; }
+    } else if (d < 32) {
+      const a = R(21, 89), b = R(3, 9);
+      if (Math.random() < .5) { q = `${a} + ${b}`; ans = a + b; } else { q = `${a} − ${b}`; ans = a - b; }
+    } else if (d < 42) {
+      if (Math.random() < .5) { const a = R(15, 69), b = R(12, 29); q = `${a} + ${b}`; ans = a + b; ex = `${a} + ${b - b % 10} = ${a + b - b % 10}, dann + ${b % 10}`; }
+      else { const a = R(40, 99), b = R(12, a - 10); q = `${a} − ${b}`; ans = a - b; ex = `${a} − ${b - b % 10} = ${a - b + b % 10}, dann − ${b % 10}`; }
+    } else if (d < 52) { const a = R(2, 10), b = R(2, 10); q = `${a} · ${b}`; ans = a * b; }
+    else if (d < 60) { const b = R(2, 10), r = R(2, 10); q = `${b * r} : ${b}`; ans = r; ex = `${r} · ${b} = ${b * r}`; }
+    else if (d < 68) { const a = R(12, 49), b = R(3, 9); q = `${a} · ${b}`; ans = a * b; ex = `${a - a % 10} · ${b} + ${a % 10} · ${b} = ${(a - a % 10) * b} + ${(a % 10) * b}`; }
+    else if (d < 76) {
+      let a = R(-20, 20), b = R(-15, 15); if (b === 0) b = -7;
+      im = 'text';
+      if (Math.random() < .5) { q = `${fmt(a)} + ${par(b)}`; ans = a + b; } else { q = `${fmt(a)} − ${par(b)}`; ans = a - b; ex = b < 0 ? `Minus minus wird plus: ${fmt(a)} + ${fmt(-b)}` : ''; }
+    } else if (d < 84) {
+      const p = pick([5, 10, 20, 25, 50, 75]), base = R(2, 16) * 20;
+      q = `${p} % von ${base}`; ans = base * p / 100; ex = `${p} % = ${fmt(p / 100)} → ${base} · ${fmt(p / 100)} = ${fmt(ans)}`;
+    } else if (d < 92) {
+      if (Math.random() < .5) { const a = R(1, 40) / 10, b = R(5, 195) / 100; q = `${fmt(a)} + ${fmt(b)}`; ans = clean(a + b); ex = 'Stellen untereinander: Zehntel zu Zehnteln, Hundertstel zu Hundertsteln'; }
+      else { const a = R(2, 9) / 10, b = R(2, 9) / (Math.random() < .5 ? 1 : 10); q = `${fmt(a)} · ${fmt(b)}`; ans = clean(a * b); ex = 'Ohne Komma rechnen, dann so viele Nachkommastellen wie beide Faktoren zusammen'; }
+    } else {
+      if (Math.random() < .4) { const n = R(11, 25); q = `${n}²`; ans = n * n; ex = `${n} · ${n}`; }
+      else { const a = R(11, 29), b = R(11, 19); q = `${a} · ${b}`; ans = a * b; ex = `${a} · ${b - b % 10} + ${a} · ${b % 10} = ${a * (b - b % 10)} + ${a * (b % 10)}`; }
+    }
+    return { label: 'Rechne', q, ans, kind: 'num', ex, im };
+  }
+
+  const U = {
+    mm: ['L', .001], cm: ['L', .01], dm: ['L', .1], m: ['L', 1], km: ['L', 1000],
+    mg: ['M', .001], g: ['M', 1], kg: ['M', 1000], t: ['M', 1e6],
+    ml: ['V', 1], 'cm³': ['V', 1], l: ['V', 1000], 'dm³': ['V', 1000], 'm³': ['V', 1e6],
+    'cm²': ['A', 1], 'dm²': ['A', 100], 'm²': ['A', 10000],
+    s: ['T', 1], min: ['T', 60], h: ['T', 3600],
+    'm/s': ['S', 1], 'km/h': ['S', 1 / 3.6]
+  };
+  function genEinheiten(d) {
+    let c;
+    if (d < 15) c = pick([[R(2, 12), 'm', 'dm'], [R(2, 12), 'dm', 'cm'], [R(2, 12), 'cm', 'mm']]);
+    else if (d < 30) c = pick([[R(2, 9), 'm', 'cm'], [R(2, 9), 'km', 'm'], [R(2, 9), 'kg', 'g'], [R(2, 9), 'm', 'mm'], [R(20, 90) * 10, 'cm', 'm']]);
+    else if (d < 45) c = pick([[R(11, 99) * 50, 'g', 'kg'], [R(21, 99) * 5, 'cm', 'm'], [R(1, 39) * 50, 'm', 'km'], [R(11, 49) / 10, 'kg', 'g']]);
+    else if (d < 60) c = pick([[pick([1.5, 2.5, .25, .75, 3.5]), 'h', 'min'], [R(2, 9), 'min', 's'], [R(5, 40) / 4, 'l', 'ml'], [R(2, 9), 'dm³', 'cm³'], [R(2, 9) * 30, 'min', 'h']]);
+    else if (d < 75) c = pick([[R(2, 9), 'km', 'cm'], [R(5, 95) / 100, 'km', 'm'], [R(1, 9) / 2, 't', 'kg'], [R(2, 9) * 250, 'mg', 'g'], [R(2, 9) * 900, 's', 'h']]);
+    else if (d < 88) c = pick([[R(2, 9), 'm²', 'cm²'], [R(2, 30), 'dm²', 'cm²'], [R(1, 19) * 500, 'cm²', 'm²'], [R(2, 9), 'm²', 'dm²']]);
+    else c = pick([[R(2, 15) * 18, 'km/h', 'm/s'], [R(2, 30), 'm/s', 'km/h'], [R(1, 9) / 2, 'm³', 'l'], [R(2, 9) * 10, 'm/s', 'km/h']]);
+    const [v, fu, tu] = c, f = U[fu][1] / U[tu][1], ans = clean(v * f);
+    const ex = f >= 1 ? `1 ${fu} = ${fmt(f)} ${tu}` : `1 ${tu} = ${fmt(1 / f)} ${fu}`;
+    return { label: `Umrechnen in ${tu}`, q: `${fmt(v)} ${fu}`, unit: tu, ans, kind: 'num', ex: ex + ` → ${fmt(v)} ${f >= 1 ? '·' : ':'} ${fmt(f >= 1 ? f : 1 / f)} = ${fmt(ans)}`, im: 'decimal' };
+  }
+
+  const bin = n => n.toString(2);
+  const places = n => { const p = []; for (let b = 1 << 10; b >= 1; b >>= 1) if (n & b) p.push(b); return p.join(' + '); };
+  function genBinaer(d) {
+    const toDec = (n, w) => ({ label: 'Binär → Dezimal', q: bin(n).padStart(w, '0') + '₂', ans: n, kind: 'num', ex: `${places(n)} = ${n}`, im: 'numeric' });
+    const toBin = n => ({ label: 'Dezimal → Binär', q: String(n), unit: '₂', ans: bin(n), kind: 'str', ex: `${n} = ${places(n)} → ${bin(n)}`, im: 'numeric' });
+    if (d < 15) return toDec(R(1, 7), 3);
+    if (d < 28) return toDec(R(5, 15), 4);
+    if (d < 40) return toBin(R(3, 15));
+    if (d < 52) return toDec(R(16, 63), 6);
+    if (d < 64) return toBin(R(16, 63));
+    if (d < 74) return toDec(R(64, 255), 8);
+    if (d < 82) { const n = R(10, 255), h = n.toString(16).toUpperCase(); return { label: 'Hexadezimal → Dezimal', q: h + '₁₆', ans: n, kind: 'num', ex: h.length > 1 ? `${parseInt(h[0], 16)} · 16 + ${parseInt(h[1], 16)} = ${n}` : `${h} = ${n}`, im: 'numeric' }; }
+    if (d < 90) { const n = R(16, 255), h = n.toString(16).toUpperCase(); return { label: 'Dezimal → Hexadezimal', q: String(n), unit: '₁₆', ans: h, kind: 'str', ex: `${n} : 16 = ${Math.floor(n / 16)} Rest ${n % 16} → ${h}`, im: 'text' }; }
+    const a = R(5, 31), b = R(5, 31);
+    return { label: 'Binär addieren', q: `${bin(a)} + ${bin(b)}`, unit: '₂', ans: bin(a + b), kind: 'str', ex: `${a} + ${b} = ${a + b} = ${bin(a + b)}₂`, im: 'numeric' };
+  }
+
+  const TOPICS = {
+    rechnen: { name: 'Kopfrechnen', fach: 'Mathematik', gen: genRechnen },
+    einheiten: { name: 'Einheiten umrechnen', fach: 'Natur und Technik', gen: genEinheiten },
+    binaer: { name: 'Zahlensysteme', fach: 'Medien und Informatik', gen: genBinaer }
+  };
+
+  // ---------- Speicher ----------
+  const KEY = 'flowtrainer.v1', GOAL = 30, ROUND = 20, SCALE = 8;
+  const fresh = () => ({ topics: Object.fromEntries(Object.keys(TOPICS).map(k => [k, { theta: 15, n: 0 }])), xp: 0, days: {}, dayStreak: 0, lastGoalDay: '' });
+  let state;
+  try { state = JSON.parse(localStorage.getItem(KEY)) || fresh(); } catch (e) { state = fresh(); }
+  for (const k in TOPICS) state.topics[k] = state.topics[k] || { theta: 15, n: 0 };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { } };
+  const dayKey = (o = 0) => { const t = new Date(Date.now() + o * 864e5); return `${t.getFullYear()}-${t.getMonth() + 1}-${t.getDate()}`; };
+
+  // ---------- Adaptives Modell (Elo / Rasch-ähnlich) ----------
+  // P(richtig) = 1 / (1 + e^-((Können - Schwierigkeit) / SCALE))
+  const prob = (th, d) => 1 / (1 + Math.exp(-(th - d) / SCALE));
+  const stufe = th => clamp(Math.floor(th / 10) + 1, 1, 10);
+  const level = xp => Math.floor(Math.sqrt(xp / 50)) + 1;
+
+  let sess = null, item = null, shownAt = 0, awaitingNext = false, breakShown = false;
+
+  function startSession(mode) {
+    sess = { mode, count: 0, right: 0, rightRun: 0, wrongRun: 0, log: [], xp: 0, start: Date.now(), startStufe: {} };
+    for (const k in TOPICS) sess.startStufe[k] = state.topics[k].theta;
+    $('home').hidden = true; $('play').hidden = false; $('roundEnd').hidden = true; $('taskArea').hidden = false;
+    nextItem();
+  }
+
+  function nextItem() {
+    awaitingNext = false;
+    const keys = Object.keys(TOPICS);
+    const tk = sess.mode === 'mix' ? keys[sess.count % keys.length] : sess.mode;
+    const t = state.topics[tk];
+    let p = 0.8, challenge = false;
+    if (sess.wrongRun >= 2) p = 0.92;            // Frust vermeiden
+    else if (sess.rightRun >= 5) p = 0.72;       // Langeweile vermeiden
+    if (sess.count % 7 === 6 && sess.wrongRun === 0) { p = 0.55; challenge = true; }
+    p = clamp(p + (Math.random() - .5) * .08, .5, .95);
+    const d = clamp(t.theta - SCALE * Math.log(p / (1 - p)), 0, 100);
+    item = Object.assign(TOPICS[tk].gen(d), { d, p: prob(t.theta, d), topic: tk, challenge });
+    renderItem();
+  }
+
+  function check(raw) {
+    if (item.kind === 'num') {
+      const s = raw.replace(/[\s'’]/g, '').replace(',', '.').replace('−', '-');
+      if (!/^-?\d*\.?\d+$/.test(s)) return null;
+      const v = parseFloat(s);
+      return Math.abs(v - item.ans) < 1e-9 * Math.max(1, Math.abs(item.ans));
+    }
+    const s = raw.replace(/[\s₂₁₆]/g, '').toUpperCase().replace(/^0+(?=.)/, '');
+    if (!s) return null;
+    return s === String(item.ans).toUpperCase();
+  }
+
+  function submit() {
+    if (awaitingNext) { nextItem(); return; }
+    const raw = $('ansInput').value;
+    const ok = check(raw);
+    if (ok === null) { $('feedback').innerHTML = '<span class="ex">Bitte eine Zahl eingeben.</span>'; return; }
+    const secs = (Date.now() - shownAt) / 1000;
+    const t = state.topics[item.topic];
+    // Schnell und richtig = 1, langsam und richtig sinkt bis 0.85, falsch = 0
+    const expT = 4 + item.d * 0.12;
+    const score = ok ? (secs <= expT ? 1 : Math.max(0.85, 1 - 0.15 * (secs - expT) / (2 * expT))) : 0;
+    const K = t.n < 6 ? 14 : Math.max(3, 10 / Math.sqrt(1 + (t.n - 6) / 10));
+    const before = stufe(t.theta);
+    t.theta = clamp(t.theta + K * (score - item.p), 0, 105);
+    t.n++;
+    const after = stufe(t.theta);
+
+    sess.count++;
+    let gained = 0;
+    if (ok) {
+      sess.right++; sess.rightRun++; sess.wrongRun = 0;
+      gained = Math.round(5 + item.d / 8) * (item.challenge ? 2 : 1) + Math.min(sess.rightRun - 1, 10);
+    } else { sess.wrongRun++; sess.rightRun = 0; }
+    state.xp += gained; sess.xp += gained;
+    sess.log.push({ d: item.d, ok, th: t.theta });
+
+    const today = dayKey();
+    state.days = { [today]: (state.days[today] || 0) + 1 };
+    if (state.days[today] >= GOAL && state.lastGoalDay !== today) {
+      state.dayStreak = state.lastGoalDay === dayKey(-1) ? state.dayStreak + 1 : 1;
+      state.lastGoalDay = today;
+    }
+    save();
+
+    const card = $('taskCard');
+    card.classList.remove('shake', 'pop'); void card.offsetWidth;
+    if (ok) {
+      card.classList.add('pop');
+      const up = after > before ? ` Stufe ${after} erreicht.` : '';
+      $('feedback').innerHTML = `<span class="ok">Richtig. +${gained} XP${sess.rightRun >= 3 ? ` · ${sess.rightRun} in Folge` : ''}.${up}</span>`;
+    } else {
+      card.classList.add('shake');
+      $('feedback').innerHTML = `<span class="bad">Richtig wäre: ${esc(item.kind === 'num' ? fmt(item.ans) : item.ans)}${item.unit ? ' ' + esc(item.unit) : ''}</span><br><span class="ex">${esc(item.ex || '')}</span>`;
+    }
+    renderStats(); renderSide(); renderProgress(true, ok);
+
+    if (!breakShown && Date.now() - sess.start > 20 * 60 * 1000) { breakShown = true; $('breakBanner').hidden = false; }
+    if (sess.count % ROUND === 0) { sess.roundPending = true; setTimeout(roundEnd, ok ? 900 : 2200); awaitingNext = true; $('ansInput').disabled = true; $('ansBtn').disabled = true; return; }
+    if (ok) { awaitingNext = true; $('ansInput').disabled = true; setTimeout(() => { if (awaitingNext && !$('play').hidden) nextItem(); }, 900); }
+    else { awaitingNext = true; $('ansInput').disabled = true; $('ansBtn').textContent = 'Weiter'; $('ansBtn').focus(); }
+  }
+
+  function roundEnd() {
+    awaitingNext = false; sess.roundPending = false;
+    const last = sess.log.slice(-ROUND), acc = Math.round(100 * last.filter(x => x.ok).length / last.length);
+    const rows = Object.keys(TOPICS).filter(k => sess.mode === 'mix' || k === sess.mode).map(k => {
+      const a = stufe(sess.startStufe[k]), b = stufe(state.topics[k].theta);
+      return `<div><span class="label">${TOPICS[k].name}</span><div class="v">${a === b ? 'Stufe ' + b : a + ' → ' + b}</div></div>`;
+    }).join('');
+    $('taskArea').hidden = true;
+    const re = $('roundEnd'); re.hidden = false;
+    re.innerHTML = `<div class="task" style="padding-bottom:0"><span class="label">Runde ${sess.count / ROUND} geschafft</span><h2 style="font-size:32px">${acc >= 70 && acc <= 90 ? 'Genau im Flow.' : acc > 90 ? 'Zu leicht für dich. Es wird schwerer.' : 'Anspruchsvolle Runde. Es wird leichter.'}</h2></div>
+      <div class="summary"><div><span class="label">Treffer</span><div class="v">${acc} %</div></div><div><span class="label">XP</span><div class="v">+${sess.xp}</div></div>${rows}</div>
+      <div class="actions"><button class="btn" id="moreBtn" type="button">Noch eine Runde</button><button class="btn ghost" id="homeBtn" type="button">Themenwahl</button></div>`;
+    sess.xp = 0;
+    for (const k in TOPICS) sess.startStufe[k] = state.topics[k].theta;
+    $('moreBtn').onclick = () => { re.hidden = true; $('taskArea').hidden = false; nextItem(); };
+    $('homeBtn').onclick = goHome;
+    $('moreBtn').focus();
+  }
+
+  // ---------- Darstellung ----------
+  function renderItem() {
+    $('tTopic').textContent = `${TOPICS[item.topic].name} · Stufe ${stufe(state.topics[item.topic].theta)}`;
+    $('tPills').innerHTML = item.challenge ? '<span class="pill challenge">Herausforderung · doppelte XP</span>' : '';
+    $('tLabel').textContent = item.label;
+    $('tQ').textContent = item.q;
+    $('tUnit').textContent = item.unit || '';
+    const inp = $('ansInput');
+    inp.value = ''; inp.disabled = false; inp.inputMode = item.im || 'decimal';
+    $('ansBtn').disabled = false; $('ansBtn').textContent = 'Prüfen';
+    $('feedback').innerHTML = '';
+    renderProgress(false);
+    inp.focus();
+    shownAt = Date.now();
+  }
+
+  function renderProgress(answered, ok) {
+    const inRound = answered ? ((sess.count - 1) % ROUND) + 1 : sess.count % ROUND;
+    const last = inRound ? sess.log.slice(-inRound) : [];
+    let h = '';
+    for (let i = 0; i < ROUND; i++) {
+      if (i < last.length) h += `<i class="${last[i].ok ? 'ok' : 'bad'}"></i>`;
+      else if (i === last.length && !answered) h += '<i class="now"></i>';
+      else h += '<i></i>';
+    }
+    $('tProgress').innerHTML = h;
+  }
+
+  function renderSide() {
+    const last = sess.log.slice(-10);
+    const pill = $('zonePill');
+    if (last.length < 5) { pill.className = 'pill'; pill.textContent = 'Messung läuft'; $('gMark').style.left = '80%'; }
+    else {
+      const acc = last.filter(x => x.ok).length / last.length;
+      $('gMark').style.left = (acc * 100) + '%';
+      if (acc > .9) { pill.className = 'pill easy'; pill.textContent = 'Zu leicht · wird schwerer'; }
+      else if (acc < .7) { pill.className = 'pill hard'; pill.textContent = 'Zu schwer · wird leichter'; }
+      else { pill.className = 'pill flow'; pill.textContent = 'Im Flow'; }
+    }
+    // Diagramm: Säulen = Schwierigkeit, Linie = Können
+    const N = 24, L = sess.log.slice(-N), x0 = 44, w = 330 - x0 - 4, y = v => 110 - v;
+    let s = '';
+    for (const g of [0, 30, 60, 90]) s += `<line x1="${x0}" x2="326" y1="${y(g)}" y2="${y(g)}" stroke="var(--line)" stroke-width="1"></line><text x="${x0 - 6}" y="${y(g) + 4}" text-anchor="end" font-size="10" fill="var(--muted)" font-family="Atkinson Hyperlegible, sans-serif">Stufe ${stufe(g)}</text>`;
+    const bw = w / N;
+    L.forEach((e, i) => { const h = Math.max(2, e.d); s += `<rect x="${x0 + i * bw + 1.5}" y="${y(h)}" width="${bw - 3}" height="${h}" rx="2" fill="${e.ok ? 'var(--ok)' : 'var(--bad)'}" opacity=".85"></rect>`; });
+    if (L.length > 1) s += `<polyline fill="none" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round" points="${L.map((e, i) => `${x0 + i * bw + bw / 2},${y(clamp(e.th, 0, 100))}`).join(' ')}"></polyline>`;
+    if (L.length) { const e = L[L.length - 1]; s += `<circle cx="${x0 + (L.length - 1) * bw + bw / 2}" cy="${y(clamp(e.th, 0, 100))}" r="3.5" fill="var(--ink)"></circle>`; }
+    else s += `<text x="${x0 + w / 2}" y="60" text-anchor="middle" font-size="12" fill="var(--muted)" font-family="Atkinson Hyperlegible, sans-serif">Erscheint nach der ersten Antwort</text>`;
+    $('chart').innerHTML = s;
+  }
+
+  function renderStats() {
+    $('sXp').textContent = state.xp;
+    $('sLevel').textContent = level(state.xp);
+    const today = state.days[dayKey()] || 0;
+    $('sDays').textContent = (state.lastGoalDay === dayKey() || state.lastGoalDay === dayKey(-1)) ? state.dayStreak : 0;
+    $('ringArc').setAttribute('stroke-dashoffset', 113.1 * (1 - Math.min(1, today / GOAL)));
+    $('ringTxt').textContent = Math.min(today, 99);
+  }
+
+  function renderHome() {
+    let h = '';
+    for (const k in TOPICS) {
+      const t = state.topics[k], st = stufe(t.theta), within = st === 10 ? 100 : (t.theta % 10) * 10;
+      h += `<button class="topic" type="button" data-mode="${k}">
+        <span class="label">${TOPICS[k].fach}</span><h3>${TOPICS[k].name}</h3>
+        <div class="row"><span class="stufe">Stufe ${st} von 10</span><span class="note">${t.n} Aufgaben</span></div>
+        <div class="bar"><i style="width:${within}%"></i></div></button>`;
+    }
+    h += `<button class="topic mix" type="button" data-mode="mix"><span class="label">Alle Fächer</span><h3>Gemischt</h3>
+      <span>Die drei Themen im Wechsel. Jedes Thema behält seine eigene Stufe.</span></button>`;
+    $('topicList').innerHTML = h;
+    $('topicList').querySelectorAll('.topic').forEach(b => b.onclick = () => startSession(b.dataset.mode));
+  }
+
+  function goHome() { $('play').hidden = true; $('home').hidden = false; $('breakBanner').hidden = true; renderHome(); renderStats(); }
+
+  $('ansForm').addEventListener('submit', e => { e.preventDefault(); submit(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Enter' && awaitingNext && !sess.roundPending && !$('play').hidden && $('roundEnd').hidden && document.activeElement !== $('ansBtn')) { e.preventDefault(); nextItem(); } });
+  $('quitBtn').onclick = goHome;
+  $('breakOk').onclick = () => { $('breakBanner').hidden = true; $('ansInput').focus(); };
+  const onReset = () => {
+    const row = $('resetRow'), html = row.innerHTML;
+    row.innerHTML = '<span>Alle Stufen, XP und Tage löschen?</span><button class="linkbtn danger" id="resetYes" type="button">Ja, löschen</button><button class="linkbtn" id="resetNo" type="button">Abbrechen</button>';
+    const restore = () => { row.innerHTML = html; $('resetBtn').onclick = onReset; renderHome(); renderStats(); };
+    $('resetYes').onclick = () => { state = fresh(); save(); restore(); };
+    $('resetNo').onclick = restore;
+  };
+  $('resetBtn').onclick = onReset;
+
+  renderHome(); renderStats();
+})();
+</script>
