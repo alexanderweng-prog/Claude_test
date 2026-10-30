@@ -902,8 +902,20 @@ const APPS = {
   'nt8-1': { name: 'Blitzzitadelle (8_1 Stromkreise untersuchen)', levels: ['Funkenfänger', 'Drahtzieherin', 'Lichtbringer', 'Schalterhüterin', 'Blitzbändiger', 'Herrin der Blitze'] },
   'nt8-5': { name: 'Titanenfeste (8_5 Kräfte, Arbeit und Leistung erforschen)', levels: ['Knappe', 'Hebelmeisterin', 'Rampenbauer', 'Flaschenzugmeisterin', 'Burgbaumeister', 'Titanin'] },
   'leistung': { name: 'Drachenarena (Leistung)', levels: ['Drachenei', 'Schlüpfling', 'Jungdrache', 'Feuerdrache', 'Sturmdrache', 'Urdrache'] },
-  'motor': { name: 'Runenminen (Motor)', levels: ['Grubenlicht', 'Spulenwicklerin', 'Magnetschmied', 'Rotormeisterin', 'Dynamomeister', 'Runenkönigin'] }
+  'motor': { name: 'Runenminen (Motor)', levels: ['Grubenlicht', 'Spulenwicklerin', 'Magnetschmied', 'Rotormeisterin', 'Dynamomeister', 'Runenkönigin'] },
+  'kanti': { name: 'Kanti-Trainer (Aufnahmeprüfung Mathematik)', levels: [] }
 };
+// Kanti-Trainer: Themen in derselben Reihenfolge wie in der App
+const KANTI_TOPICS = ['Rechnen und Potenzen', 'Brüche', 'Masse, Vergleiche, Prozent', 'Terme', 'Gleichungen', 'Textaufgaben', 'Koordinaten und Abbildungen', 'Teiler und Vielfache', 'Muster und Wahrscheinlichkeit'];
+function kantiPlausibility(p) {
+  const f = [], isInt = n => Number.isInteger(n) && n >= 0;
+  if (![p.x, p.ro, p.st, p.l].every(isInt)) return ['Ungültige Zahlenwerte'];
+  if (!Array.isArray(p.t) || p.t.length !== KANTI_TOPICS.length || !p.t.every(v => Number.isInteger(v) && v >= 1 && v <= 10)) return ['Ungültiger Aufbau der Stufen'];
+  if (!Array.isArray(p.e) || p.e.length > 3 || !p.e.every(e => Array.isArray(e) && Number.isInteger(e[0]) && e[0] >= 0 && e[0] <= 24 && e[1] >= 10 && e[1] <= 60)) return ['Ungültige Probeprüfungen'];
+  if (Math.floor(Math.sqrt(p.x / 50)) + 1 !== p.l) f.push('Das Level passt nicht zu den Punkten.');
+  if (p.x > p.ro * 45 + 10) f.push('Mehr Punkte, als mit ' + p.ro + ' Aufgaben möglich sind.');
+  return f;
+}
 const appOf = p => APPS[p.tp] || APPS.leistung;
 const VALID_SECONDS = 600, TOLERANCE = 60;
 const lsGet = (k, d) => { try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : d; } catch (e) { return d; } };
@@ -952,11 +964,13 @@ async function handleToken(text) {
   if (age < -120) { out.title = 'Uhrzeit prüfen'; out.cls = 'warn'; out.flags = ['Das Gerät des Schülers geht vor. Bitte Datum und Uhrzeit prüfen und neu erzeugen.']; return show(out); }
   if (list.some(r => r.id === p.id)) { out.dup = true; out.title = 'Schon gescannt'; out.cls = 'warn'; out.p = p; out.flags = ['Dieser Code wurde bereits gelesen. Jeder Code zählt nur einmal.']; return show(out); }
   if (p.tp && !APPS[p.tp]) { out.title = 'Unbekannte App'; out.cls = 'warn'; out.flags = ['Dieser Code stammt von einer App, die diese Prüf-App nicht kennt (' + String(p.tp).slice(0, 20) + ').']; return show(out); }
-  out.flags = plausibility(p);
+  const isK = p.tp === 'kanti';
+  out.flags = isK ? kantiPlausibility(p) : plausibility(p);
   out.ok = out.flags.length === 0;
   out.title = out.ok ? 'Plausibel' : 'Auffällig';
   out.cls = out.ok ? 'good' : 'warn';
-  list.unshift({ id: p.id, tp: p.tp || 'leistung', t: Date.now(), n: p.n, r: p.r, k: p.k, x: p.x, l: p.l, w: p.w, ro: p.ro, s: p.s, ls: p.ls, st: p.st, ch: p.ch || [], f: out.flags });
+  if (isK) list.unshift({ id: p.id, tp: 'kanti', t: Date.now(), n: p.n || '–', r: p.r, k: p.k, x: p.x, l: p.l, w: 0, ro: p.ro, s: '------', ls: '000000', st: p.st, ch: [], kt: p.t, ke: p.e, kf: p.f, f: out.flags });
+  else list.unshift({ id: p.id, tp: p.tp || 'leistung', t: Date.now(), n: p.n, r: p.r, k: p.k, x: p.x, l: p.l, w: p.w, ro: p.ro, s: p.s, ls: p.ls, st: p.st, ch: p.ch || [], f: out.flags });
   lsSet(LIST_STORE, list);
   show(out); renderList();
 }
@@ -971,8 +985,12 @@ function show(o) {
   tb.textContent = ''; fl.textContent = '';
   if (o.p) {
     const p = o.p;
-    who.textContent = (p.r ? p.r + ' \u00B7 ' : '') + p.n + (p.k ? ' \u00B7 ' + p.k : '');
-    tb.append(row('App', appOf(p).name), row('Punkte gesamt', p.x + ' XP'), row('Stufe', p.l + ' ' + (appOf(p).levels[p.l - 1] || '')), row('Punkte diese Woche', p.w + ' XP'), row('Runden gespielt', String(p.ro)),
+    who.textContent = [p.r, p.n, p.k].filter(Boolean).join(' \u00B7 ');
+    if (p.tp === 'kanti') {
+      tb.append(row('App', appOf(p).name), row('Punkte gesamt', p.x + ' XP'), row('Level', String(p.l)), row('Aufgaben gelöst', String(p.ro)), row('Serie', p.st + ' Tage'));
+      if (Array.isArray(p.t)) p.t.forEach((v, i) => tb.append(row(KANTI_TOPICS[i] || 'Thema ' + (i + 1), 'Stufe ' + v + ' von 10')));
+      tb.append(row('Probeprüfungen', (p.e || []).map(e => e[0] + '/24 → ' + (e[1] / 10).toFixed(1)).join('; ') || 'keine'), row('Fehlerheft', (p.f || 0) + (p.f === 1 ? ' Aufgabentyp' : ' Aufgabentypen') + ' offen'));
+    } else tb.append(row('App', appOf(p).name), row('Punkte gesamt', p.x + ' XP'), row('Stufe', p.l + ' ' + (appOf(p).levels[p.l - 1] || '')), row('Punkte diese Woche', p.w + ' XP'), row('Runden gespielt', String(p.ro)),
       row('Sterne Station 1 bis 6', typeof p.s === 'string' ? starsText(p.s) : '?'), row('Lektionen gelesen', typeof p.ls === 'string' ? p.ls.split('').filter(c => c === '1').length + ' von 6' : '?'),
       row('Serie', p.st + ' Tage'), row('Challenges', (p.ch || []).map(c => c[0] + ': ' + c[1] + ' von 6 in ' + c[2] + ' s').join('; ') || 'keine'));
   } else who.textContent = '';
@@ -996,8 +1014,9 @@ function renderList() {
 }
 const csvCell = v => { let s = String(v == null ? '' : v); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };
 function exportCsv() {
-  const head = ['Zeit', 'App', 'Name', 'Zufallsname', 'Klasse', 'XP', 'Stufe', 'XP diese Woche', 'Runden', 'Sterne S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'Lektionen gelesen', 'Serie (Tage)', 'Hinweise'];
-  const rows = list.map(r => [new Date(r.t).toLocaleString('de-CH'), (APPS[r.tp] || APPS.leistung).name, r.r, r.n, r.k, r.x, r.l, r.w, r.ro, ...r.s.split('').map(c => (c === '-' ? '\u2013' : c)), r.ls.split('').filter(c => c === '1').length, r.st, r.f.join(' | ')]);
+  const head = ['Zeit', 'App', 'Name', 'Zufallsname', 'Klasse', 'XP', 'Stufe', 'XP diese Woche', 'Runden', 'Sterne S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'Lektionen gelesen', 'Serie (Tage)', 'Hinweise', ...KANTI_TOPICS.map(t => 'Kanti: ' + t), 'Kanti: Probeprüfungen'];
+  const rows = list.map(r => [new Date(r.t).toLocaleString('de-CH'), (APPS[r.tp] || APPS.leistung).name, r.r, r.n, r.k, r.x, r.l, r.w, r.ro, ...r.s.split('').map(c => (c === '-' ? '\u2013' : c)), r.ls.split('').filter(c => c === '1').length, r.st, r.f.join(' | '),
+    ...KANTI_TOPICS.map((_, i) => (r.kt ? r.kt[i] : '')), (r.ke || []).map(e => e[0] + '/24 (' + (e[1] / 10).toFixed(1) + ')').join(' ')]);
   const csv = '\ufeff' + [head, ...rows].map(r => r.map(csvCell).join(';')).join('\r\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
