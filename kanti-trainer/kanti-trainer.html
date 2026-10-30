@@ -123,6 +123,16 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent-200)
 .summary .v { font-family: var(--f-mono); font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
+/* Erklärungen */
+.explrow { margin-bottom: 14px; }
+.explbtn { background: none; border: 0; padding: 0; color: var(--accent-700); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.callout.expl { margin-bottom: 16px; }
+.callout.expl p { max-width: 62ch; }
+.exbox { font-family: var(--f-mono); font-size: 15px; background: var(--white); border: 1px solid var(--accent-200); border-radius: 6px; padding: 10px 14px; line-height: 1.8; overflow-x: auto; }
+.exbox .fr { font-size: .85em; }
+.exbox { white-space: nowrap; }
+@media (max-width: 480px) { .callout { padding: 14px; gap: 10px; } .callout .badge { display: none; } }
+
 /* Probeprüfung */
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--white); }
 .examcard { border: 1px solid var(--accent-200); background: var(--accent-100); border-radius: var(--radius-md); padding: 20px; display: flex; gap: 16px; justify-content: space-between; align-items: center; flex-wrap: wrap; }
@@ -228,6 +238,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
             <p class="ctx" id="tCtx" hidden></p>
             <div class="q" id="tQ"></div>
           </div>
+          <div class="explrow"><button class="explbtn" id="explBtn" type="button">Erklärung zeigen</button></div>
+          <div class="callout expl" id="explBox" hidden></div>
           <form class="answer" id="ansForm" autocomplete="off">
             <label class="field" for="ansInput">
               <input id="ansInput" type="text" inputmode="decimal" aria-label="Deine Antwort" spellcheck="false" autocapitalize="off">
@@ -302,41 +314,43 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   const lin = (a, b, v = 'x') => poly([[a, v], [b, '']]);
   const nz = (a, b) => { let x; do x = R(a, b); while (x === 0); return x; };
 
+  let EK = '';   // Aufgabentyp der zuletzt erzeugten Aufgabe, für die Erklärung
+
   // ---------- 1 Rechnen und Potenzen ----------
   function genRechnen(d) {
     let q, ans, ex = '', label = 'Berechne';
-    if (d < 15) { const a = R(5, 30), b = R(2, 6), c = -R(2, 9), e = R(2, 20); q = `${a} + ${b} · ${par(c)} − ${e}`; ans = a + b * c - e; ex = `Punkt vor Strich: ${b} · ${par(c)} = ${fmt(b * c)}`; }
+    if (d < 15) { EK = 'r-punkt'; const a = R(5, 30), b = R(2, 6), c = -R(2, 9), e = R(2, 20); q = `${a} + ${b} · ${par(c)} − ${e}`; ans = a + b * c - e; ex = `Punkt vor Strich: ${b} · ${par(c)} = ${fmt(b * c)}`; }
     else if (d < 30) {
-      if (Math.random() < .5) { const a = R(10, 40), b = -R(2, 9), c = R(2, 6); q = `${a} − ${par(b)} · ${c}`; ans = a - b * c; ex = `${par(b)} · ${c} = ${fmt(b * c)}, dann ${a} − ${par(b * c)} = ${fmt(ans)}`; }
-      else { const a = R(2, 12), b = R(13, 25), c = -R(2, 5); q = `(${a} − ${b}) · ${par(c)}`; ans = (a - b) * c; ex = `Klammer zuerst: ${a} − ${b} = ${fmt(a - b)}`; }
+      if (Math.random() < .5) { EK = 'r-punkt'; const a = R(10, 40), b = -R(2, 9), c = R(2, 6); q = `${a} − ${par(b)} · ${c}`; ans = a - b * c; ex = `${par(b)} · ${c} = ${fmt(b * c)}, dann ${a} − ${par(b * c)} = ${fmt(ans)}`; }
+      else { EK = 'r-klammer'; const a = R(2, 12), b = R(13, 25), c = -R(2, 5); q = `(${a} − ${b}) · ${par(c)}`; ans = (a - b) * c; ex = `Klammer zuerst: ${a} − ${b} = ${fmt(a - b)}`; }
     } else if (d < 45) {
-      const v = R(1, 3);
+      EK = 'r-potenz'; const v = R(1, 3);
       if (v === 1) { const b = R(2, 4); q = `(−${b})³ + ${b}⁰`; ans = -(b ** 3) + 1; ex = `(−${b})³ = ${fmt(-(b ** 3))}, und jede Zahl hoch 0 ist 1`; }
       else if (v === 2) { const m = R(3, 7), n = R(3, 9); q = `2${sup(m)} − ${n}²`; ans = 2 ** m - n * n; ex = `2${sup(m)} = ${2 ** m}, ${n}² = ${n * n}`; }
       else { const k = R(2, 5), e = R(2, 4); q = `0.${k}${sup(e)}`; ans = clean((k / 10) ** e); ex = `${k}${sup(e)} = ${k ** e}, dann ${e} Nachkommastellen`; }
     } else if (d < 55) {
-      const v = R(1, 3);
+      EK = 'r-wurzel'; const v = R(1, 3);
       if (v === 1) { const n = R(11, 25); q = rad(n * n); ans = n; ex = `${n} · ${n} = ${n * n}`; }
       else if (v === 2) { const k = pick([2, 3, 5, 6, 7]), m = R(3, 12); q = `${rad(k * m * m)} : ${rad(k)}`; ans = m; ex = `${rad(k * m * m)} : ${rad(k)} = ${rad(m * m)} = ${m}`; }
       else { const k = pick([2, 3, 5, 6, 7]), m = R(2, 6); q = `${rad(k)} · ${rad(k * m * m)}`; ans = k * m; ex = `${rad(k * k * m * m)} = ${k * m}`; }
     } else if (d < 70) {
-      label = 'Setze den Exponenten ein';
+      EK = 'r-zehner'; label = 'Setze den Exponenten ein';
       if (Math.random() < .5) {
         const [w, ue] = pick([['Tausend', 3], ['Millionen', 6], ['Milliarden', 9]]), x = R(11, 999) / 10, k = Math.floor(Math.log10(x)), m = clean(x / 10 ** k);
-        q = `${fmt(x)} ${w} = ${fmt(m)} · 10<sup>?</sup>`; ans = ue + k; ex = `${w} = 10<sup>${ue}</sup>, das Komma wandert ${k} Stellen`;
+        q = `${fmt(x)} ${w} = ${fmt(m)} · 10<sup>?</sup>`; ans = ue + k; ex = `${w} = 10<sup>${ue}</sup>` + (k ? `, das Komma wandert noch ${k} Stelle${k === 1 ? '' : 'n'} nach links` : '');
       } else {
         const m = R(11, 99) / 10, e = -R(2, 6);
         q = `${(m * 10 ** e).toFixed(-e + 1)} = ${fmt(m)} · 10<sup>?</sup>`; ans = e; ex = `Das Komma wandert ${-e} Stellen nach rechts, also 10<sup>${fmt(e)}</sup>`;
       }
     } else if (d < 85) {
-      const a = R(2, 6), b = R(2, 5), f = R(2, 3), g = R(2, 4), e = f * g;
+      EK = 'r-reihenfolge'; const a = R(2, 6), b = R(2, 5), f = R(2, 3), g = R(2, 4), e = f * g;
       q = `(${a} + ${a} · ${b}) − (−${e})² : ${f}²`; ans = a + a * b - g * g;
       ex = `Klammer: ${a + a * b}. (−${e})² = ${e * e}, ${f}² = ${f * f}, ${e * e} : ${f * f} = ${g * g}`;
     } else {
       const v = R(1, 3);
-      if (v === 1) { const b = R(2, 3), c = R(2, 5); q = `(−${b})${sup(4)} − ${c} · (−${b})³`; ans = b ** 4 + c * b ** 3; ex = `(−${b})${sup(4)} = ${b ** 4}, (−${b})³ = ${fmt(-(b ** 3))}`; }
-      else if (v === 2) { const k = R(2, 9), p = R(2, 4); q = `0.${k}² · 10${sup(p)}`; ans = clean(k * k * 10 ** (p - 2)); ex = `0.${k}² = ${fmt(k * k / 100)}`; }
-      else { const k = R(2, 9), j = R(1, 5); q = `${rad(fmt(k * k / 100))} + 0.${j}²`; ans = clean(k / 10 + j * j / 100); ex = `${rad(fmt(k * k / 100))} = 0.${k}, 0.${j}² = ${fmt(j * j / 100)}`; }
+      if (v === 1) { EK = 'r-potenz'; const b = R(2, 3), c = R(2, 5); q = `(−${b})${sup(4)} − ${c} · (−${b})³`; ans = b ** 4 + c * b ** 3; ex = `(−${b})${sup(4)} = ${b ** 4}, (−${b})³ = ${fmt(-(b ** 3))}`; }
+      else if (v === 2) { EK = 'r-potenz'; const k = R(2, 9), p = R(2, 4); q = `0.${k}² · 10${sup(p)}`; ans = clean(k * k * 10 ** (p - 2)); ex = `0.${k}² = ${fmt(k * k / 100)}`; }
+      else { EK = 'r-wurzel'; const k = R(2, 9), j = R(1, 5); q = `${rad(fmt(k * k / 100))} + 0.${j}²`; ans = clean(k / 10 + j * j / 100); ex = `${rad(fmt(k * k / 100))} = 0.${k}, 0.${j}² = ${fmt(j * j / 100)}`; }
     }
     return { label, q, ans, kind: 'num', ex };
   }
@@ -345,17 +359,17 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   function genBrueche(d) {
     for (let t = 0; t < 200; t++) {
       let q, ans, label = 'Berechne. Kürze vollständig.';
-      if (d < 20) { let [p, r] = F(R(1, 8), R(2, 9)); if (r === 1) continue; const k = R(2, 9); q = fr(p * k, r * k); ans = [p, r]; label = 'Kürze vollständig'; }
-      else if (d < 35) { const a = rf(6), b = rf(6); if (Math.random() < .5) { q = `${fh(a)} + ${fh(b)}`; ans = fa(a, b); } else { q = `${fh(a)} − ${fh(b)}`; ans = fs(a, b); } }
-      else if (d < 50) { const a = rf(10, true), b = rf(10); if (Math.random() < .5) { q = `${fh(a)} · ${fh(b)}`; ans = fm(a, b); } else { q = `${fh(a)} : ${fh(b)}`; ans = fd(a, b); } }
-      else if (d < 65) { const a = rf(8), b = rf(8, true), c = rf(8, true); q = `${fh(a)} − ${fh(b, true)} + ${fh(c, true)}`; ans = fa(fs(a, b), c); }
+      if (d < 20) { EK = 'b-kuerzen'; let [p, r] = F(R(1, 8), R(2, 9)); if (r === 1) continue; const k = R(2, 9); q = fr(p * k, r * k); ans = [p, r]; label = 'Kürze vollständig'; }
+      else if (d < 35) { EK = 'b-addieren'; const a = rf(6), b = rf(6); if (Math.random() < .5) { q = `${fh(a)} + ${fh(b)}`; ans = fa(a, b); } else { q = `${fh(a)} − ${fh(b)}`; ans = fs(a, b); } }
+      else if (d < 50) { EK = 'b-mult'; const a = rf(10, true), b = rf(10); if (Math.random() < .5) { q = `${fh(a)} · ${fh(b)}`; ans = fm(a, b); } else { q = `${fh(a)} : ${fh(b)}`; ans = fd(a, b); } }
+      else if (d < 65) { EK = 'b-mehrere'; const a = rf(8), b = rf(8, true), c = rf(8, true); q = `${fh(a)} − ${fh(b, true)} + ${fh(c, true)}`; ans = fa(fs(a, b), c); }
       else if (d < 80) {
-        const a = rf(8, true), b = rf(8), c = rf(8, true);
+        EK = 'b-mehrere'; const a = rf(8, true), b = rf(8), c = rf(8, true);
         if (Math.random() < .5) { q = `${fh(a)} + ${fh(b)} · ${fh(c, true)}`; ans = fa(a, fm(b, c)); }
         else { q = `(${fh(a)} − ${fh(b)}) : ${fh(c, true)}`; ans = fd(fs(a, b), c); }
       } else {
         const a = rf(10, true), b = rf(10, true), c = rf(10, true);
-        label = 'Bestimme x. Kürze vollständig.';
+        EK = 'b-x'; label = 'Bestimme x. Kürze vollständig.';
         if (Math.random() < .5) { const T = R(1, 3); q = `${fh(a)} + ${fh(b, true)} + x + ${fh(c, true)} = ${T}`; ans = fs(fs(fs(F(T), a), b), c); }
         else { const T = sgn(); q = `${fh(a)} · ${fh(b, true)} · x · ${fh(c, true)} = ${fmt(T)}`; ans = fd(F(T), fm(fm(a, b), c)); }
       }
@@ -375,22 +389,22 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   const conv = (v, fu, tu) => clean(v * U[fu][1] / U[tu][1]);
   function genMasse(d) {
     if (d < 20) {
-      const [v, fu, tu] = pick([[R(2, 9), 'l', 'dl'], [R(2, 9), 'dl', 'cl'], [R(2, 30), 'cl', 'ml'], [R(2, 9) * 10, 'ml', 'cl'], [R(2, 9), 'm', 'cm'], [R(2, 9), 'kg', 'g'], [R(2, 5), 'h', 'min']]);
+      EK = 'm-umrechnen'; const [v, fu, tu] = pick([[R(2, 9), 'l', 'dl'], [R(2, 9), 'dl', 'cl'], [R(2, 30), 'cl', 'ml'], [R(2, 9) * 10, 'ml', 'cl'], [R(2, 9), 'm', 'cm'], [R(2, 9), 'kg', 'g'], [R(2, 5), 'h', 'min']]);
       const f = U[fu][1] / U[tu][1];
       return { label: `Umrechnen in ${tu}`, q: `${fmt(v)} ${fu}`, unit: tu, ans: conv(v, fu, tu), kind: 'num', ex: f >= 1 ? `1 ${fu} = ${fmt(f)} ${tu}` : `1 ${tu} = ${fmt(1 / f)} ${fu}` };
     }
     if (d < 40) {
-      if (Math.random() < .6) { const a = R(1, 9) / 2, b = R(1, 9) * 5, c = R(1, 30); return { label: 'Berechne', q: `${fmt(a)} l + ${b} cl + ${c} dl`, unit: 'dl', ans: clean(a * 10 + b / 10 + c), kind: 'num', ex: `${fmt(a)} l = ${fmt(a * 10)} dl, ${b} cl = ${fmt(b / 10)} dl` }; }
-      const a = R(1, 4), b = R(1, 9), c = R(1, 9) * 5; return { label: 'Berechne', q: `${a} m + ${b} dm + ${c} cm`, unit: 'cm', ans: a * 100 + b * 10 + c, kind: 'num', ex: `${a} m = ${a * 100} cm, ${b} dm = ${b * 10} cm` };
+      if (Math.random() < .6) { EK = 'm-summe'; const a = R(1, 9) / 2, b = R(1, 9) * 5, c = R(1, 30); return { label: 'Berechne', q: `${fmt(a)} l + ${b} cl + ${c} dl`, unit: 'dl', ans: clean(a * 10 + b / 10 + c), kind: 'num', ex: `${fmt(a)} l = ${fmt(a * 10)} dl, ${b} cl = ${fmt(b / 10)} dl` }; }
+      EK = 'm-summe'; const a = R(1, 4), b = R(1, 9), c = R(1, 9) * 5; return { label: 'Berechne', q: `${a} m + ${b} dm + ${c} cm`, unit: 'cm', ans: a * 100 + b * 10 + c, kind: 'num', ex: `${a} m = ${a * 100} cm, ${b} dm = ${b * 10} cm` };
     }
     if (d < 55) {
-      const p = pick([5, 10, 15, 20, 25, 30, 35, 40, 45, 60, 75]);
+      EK = 'm-prozentvon'; const p = pick([5, 10, 15, 20, 25, 30, 35, 40, 45, 60, 75]);
       const [v, fu, tu] = pick([[R(1, 4), 'h', 'min'], [R(2, 9), 'kg', 'g'], [R(1, 5), 'l', 'dl'], [R(2, 8), 'km', 'm']]);
       const ans = clean(conv(v, fu, tu) * p / 100);
       return { label: 'Berechne', q: `${p} % von ${v} ${fu}`, unit: tu, ans, kind: 'num', ex: `${v} ${fu} = ${fmt(conv(v, fu, tu))} ${tu}, davon ${p} % = ${fmt(ans)} ${tu}` };
     }
     if (d < 70) {
-      const v = R(1, 4); let l, r, a, b;
+      EK = 'm-vergleich'; const v = R(1, 4); let l, r, a, b;
       if (v === 1) {
         const [u1, u2] = pick([['cl', 'cm³'], ['dl', 'ml'], ['l', 'dm³'], ['m', 'cm'], ['kg', 'g'], ['h', 'min'], ['dm³', 'cl']]);
         const v1 = R(2, 60) / pick([1, 2, 10]), base = v1 * U[u1][1] * pick([1, 1, 10, .1, .5, 2]);
@@ -404,17 +418,17 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     if (d < 85) {
       if (Math.random() < .5) {
         for (;;) {
-          const G = pick([200, 400, 250, 500, 150]), p = R(2, 15), ch = G * p / 100; if (ch % 1) continue;
+          EK = 'm-prozentsatz'; const G = pick([200, 400, 250, 500, 150]), p = R(2, 15), ch = G * p / 100; if (ch % 1) continue;
           const e = R(5, 25), a = e + ch;
           return { label: 'Prozentrechnen', ctx: `Ein Verein hat zu Jahresbeginn ${G} Mitglieder. Im Lauf des Jahres treten ${e} Personen ein und ${a} Personen aus.`, q: 'Abnahme in Prozent?', unit: '%', ans: p, kind: 'num', ex: `Abnahme ${a} − ${e} = ${ch}; ${ch} von ${G} = ${p} %` };
         }
       }
-      const p = pick([5, 10, 15, 20, 25, 30, 40, 60, 75]), G = R(2, 30) * 20, W = clean(G * p / 100);
+      EK = 'm-grundwert'; const p = pick([5, 10, 15, 20, 25, 30, 40, 60, 75]), G = R(2, 30) * 20, W = clean(G * p / 100);
       return { label: 'Prozentrechnen', ctx: `${p} % eines Betrags sind ${fmt(W)} CHF.`, q: 'Wie viel sind 100 %?', unit: 'CHF', ans: G, kind: 'num', ex: `${fmt(W)} : ${p} · 100 = ${G}` };
     }
     const v = R(1, 3);
-    if (v === 1) { const P = R(2, 20) * 50, a = pick([10, 20, 25, 50]), b = pick([10, 20, 25, 50]); const ans = clean(P * (1 + a / 100) * (1 - b / 100)); return { label: 'Prozentrechnen', ctx: `Ein Velo kostet ${P} CHF. Der Preis steigt zuerst um ${a} % und sinkt dann um ${b} %.`, q: 'Neuer Preis?', unit: 'CHF', ans, kind: 'num', ex: `${P} · ${fmt(1 + a / 100)} · ${fmt(1 - b / 100)} = ${fmt(ans)}` }; }
-    const [val, fu, tu] = v === 2 ? pick([[R(2, 9), 'm²', 'cm²'], [R(1, 19) * 500, 'cm²', 'm²'], [R(2, 9) / 2, 'm³', 'l'], [R(2, 9) * 250, 'cm³', 'l']]) : pick([[R(2, 9) * 15, 'min', 'h'], [R(2, 9) * 900, 's', 'h'], [R(2, 9) / 4, 'h', 's']]);
+    if (v === 1) { EK = 'm-mehrfach'; const P = R(2, 20) * 50, a = pick([10, 20, 25, 50]), b = pick([10, 20, 25, 50]); const ans = clean(P * (1 + a / 100) * (1 - b / 100)); return { label: 'Prozentrechnen', ctx: `Ein Velo kostet ${P} CHF. Der Preis steigt zuerst um ${a} % und sinkt dann um ${b} %.`, q: 'Neuer Preis?', unit: 'CHF', ans, kind: 'num', ex: `${P} · ${fmt(1 + a / 100)} · ${fmt(1 - b / 100)} = ${fmt(ans)}` }; }
+    EK = 'm-umrechnen'; const [val, fu, tu] = v === 2 ? pick([[R(2, 9), 'm²', 'cm²'], [R(1, 19) * 500, 'cm²', 'm²'], [R(2, 9) / 2, 'm³', 'l'], [R(2, 9) * 250, 'cm³', 'l']]) : pick([[R(2, 9) * 15, 'min', 'h'], [R(2, 9) * 900, 's', 'h'], [R(2, 9) / 4, 'h', 's']]);
     const f = U[fu][1] / U[tu][1];
     return { label: `Umrechnen in ${tu}`, q: `${fmt(val)} ${fu}`, unit: tu, ans: conv(val, fu, tu), kind: 'num', ex: f >= 1 ? `1 ${fu} = ${fmt(f)} ${tu}` : `1 ${tu} = ${fmt(1 / f)} ${fu}` };
   }
@@ -425,21 +439,21 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     if (d < 20) {
       const a = R(-6, 12), b = R(-6, 12);
       if (d >= 12 && Math.random() < .5) {
-        const r = R(-10, 20);
+        EK = 't-bestimmen'; const r = R(-10, 20);
         return { label: 'Bestimme b', q: `b − 3a = ${fmt(r)}`, ctx: `Es gilt a = ${fmt(a)}.`, ans: r + 3 * a, kind: 'num', ex: `b = ${fmt(r)} + 3 · ${par(a)}` };
       }
-      const [t, f] = pick([['b − 3a', (a, b) => b - 3 * a], ['3b − (a + b)', (a, b) => 3 * b - (a + b)], ['2ab + b', (a, b) => 2 * a * b + b], ['b² − ab', (a, b) => b * b - a * b]]);
+      EK = 't-einsetzen'; const [t, f] = pick([['b − 3a', (a, b) => b - 3 * a], ['3b − (a + b)', (a, b) => 3 * b - (a + b)], ['2ab + b', (a, b) => 2 * a * b + b], ['b² − ab', (a, b) => b * b - a * b]]);
       return { label: 'Setze ein und berechne', ctx: `a = ${fmt(a)} und b = ${fmt(b)}`, q: t, ans: f(a, b), kind: 'num', ex: 'Negative Zahlen beim Einsetzen in Klammern setzen' };
     }
     if (d < 35) {
       for (;;) {
-        const c = [nz(-9, 9), nz(-9, 9), nz(-9, 9), nz(-9, 9)], A = c[0] + c[2], B = c[1] + c[3]; if (!A || !B) continue;
+        EK = 't-zusammenfassen'; const c = [nz(-9, 9), nz(-9, 9), nz(-9, 9), nz(-9, 9)], A = c[0] + c[2], B = c[1] + c[3]; if (!A || !B) continue;
         return { ...simp, q: poly([[c[0], 'a'], [c[1], 'b'], [c[2], 'a'], [c[3], 'b']]), vars: ['a', 'b'], f: e => A * e.a + B * e.b, maxTerms: 2, show: poly([[A, 'a'], [B, 'b']]), ex: 'Gleichartige Terme zusammenfassen: a mit a, b mit b' };
       }
     }
     if (d < 50) {
       for (;;) {
-        const p = nz(-5, 5), qq = nz(-5, 5), r = nz(-5, 5), s = nz(-5, 5), K = R(2, 5), sg = sgn(), A = p + sg * K * r, B = qq + sg * K * s;
+        EK = 't-klammer'; const p = nz(-5, 5), qq = nz(-5, 5), r = nz(-5, 5), s = nz(-5, 5), K = R(2, 5), sg = sgn(), A = p + sg * K * r, B = qq + sg * K * s;
         if (!A && !B) continue;
         return { ...simp, q: `(${poly([[p, 'a'], [qq, 'b']])}) ${sg < 0 ? '−' : '+'} ${K}(${poly([[r, 'a'], [s, 'b']])})`, vars: ['a', 'b'], f: e => A * e.a + B * e.b, maxTerms: (A ? 1 : 0) + (B ? 1 : 0), show: poly([[A, 'a'], [B, 'b']]), ex: `Ausmultiplizieren: ${sg < 0 ? '−' : ''}${K} · (${poly([[r, 'a'], [s, 'b']])}) = ${poly([[sg * K * r, 'a'], [sg * K * s, 'b']])}` };
       }
@@ -447,30 +461,30 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     if (d < 62) {
       const v = R(1, 3);
       if (v === 1) {
-        const r = R(2, 9) * sgn(), c2 = R(2, 9) * sgn(), c1 = r * c2, m = R(2, 4), p = R(1, m), n = R(1, 3), qq = R(1, n);
+        EK = 't-monom'; const r = R(2, 9) * sgn(), c2 = R(2, 9) * sgn(), c1 = r * c2, m = R(2, 4), p = R(1, m), n = R(1, 3), qq = R(1, n);
         return { ...simp, q: `${poly([[c1, vp('a', m) + vp('b', n)]])} : (${poly([[c2, vp('a', p) + vp('b', qq)]])})`, vars: ['a', 'b'], f: e => r * e.a ** (m - p) * e.b ** (n - qq), maxTerms: 1, show: poly([[r, vp('a', m - p) + vp('b', n - qq)]]), ex: `Zahlen dividieren: ${fmt(c1)} : ${par(c2)} = ${fmt(r)}; Exponenten subtrahieren` };
       }
-      if (v === 2) { const k = R(2, 6) * sgn(), i = R(1, 3); return { ...simp, q: `(${poly([[k, vp('a', i) + 'b']])})²`, vars: ['a', 'b'], f: e => k * k * e.a ** (2 * i) * e.b ** 2, maxTerms: 1, show: poly([[k * k, vp('a', 2 * i) + 'b²']]), ex: `Jeder Faktor wird quadriert: ${par(k)}² = ${k * k}` }; }
-      const c1 = R(2, 7) * sgn(), c2 = R(2, 7) * sgn();
+      if (v === 2) { EK = 't-potenz'; const k = R(2, 6) * sgn(), i = R(1, 3); return { ...simp, q: `(${poly([[k, vp('a', i) + 'b']])})²`, vars: ['a', 'b'], f: e => k * k * e.a ** (2 * i) * e.b ** 2, maxTerms: 1, show: poly([[k * k, vp('a', 2 * i) + 'b²']]), ex: `Jeder Faktor wird quadriert: ${par(k)}² = ${k * k}` }; }
+      EK = 't-monom'; const c1 = R(2, 7) * sgn(), c2 = R(2, 7) * sgn();
       return { ...simp, q: `${poly([[c1, 'x²']])} · (${poly([[c2, 'xy']])})`, vars: ['x', 'y'], f: e => c1 * c2 * e.x ** 3 * e.y, maxTerms: 1, show: poly([[c1 * c2, 'x³y']]), ex: 'Zahlen multiplizieren, Exponenten gleicher Variablen addieren' };
     }
     if (d < 75) {
       if (Math.random() < .55) {
-        let p, qq; do { p = nz(-9, 9); qq = nz(-9, 9); } while (p + qq === 0);
+        EK = 't-klammermal'; let p, qq; do { p = nz(-9, 9); qq = nz(-9, 9); } while (p + qq === 0);
         return { ...simp, q: `(${lin(1, p)})(${lin(1, qq)})`, vars: ['x'], f: e => (e.x + p) * (e.x + qq), maxTerms: 3, show: poly([[1, 'x²'], [p + qq, 'x'], [p * qq, '']]), ex: 'Jedes Glied der ersten Klammer mit jedem Glied der zweiten multiplizieren' };
       }
-      const a = R(1, 5), b = nz(-7, 7);
+      EK = 't-binom'; const a = R(1, 5), b = nz(-7, 7);
       return { ...simp, q: `(${lin(a, b)})²`, vars: ['x'], f: e => (a * e.x + b) ** 2, maxTerms: 3, show: poly([[a * a, 'x²'], [2 * a * b, 'x'], [b * b, '']]), ex: `Binomische Formel: (${a === 1 ? '' : a}x)² ${b < 0 ? '−' : '+'} 2 · ${a === 1 ? '' : a}x · ${Math.abs(b)} + ${Math.abs(b)}²` };
     }
     if (d < 88) {
       if (Math.random() < .5) {
-        const n = R(2, 12), k = R(n + 1, n + 8), m = k * k - n * n;
+        EK = 't-wurzel'; const n = R(2, 12), k = R(n + 1, n + 8), m = k * k - n * n;
         return { ...simp, label: 'Vereinfache (x ist positiv)', q: rad(`(${k}x)² − ${m}x²`), vars: ['x'], f: e => n * e.x, maxTerms: 1, show: `${n}x`, ex: `(${k}x)² = ${k * k}x², ${k * k}x² − ${m}x² = ${n * n}x², ${rad(n * n + 'x²')} = ${n}x` };
       }
-      const f = pick([2, 3, 5, 6, 7]), t = R(2, 6);
+      EK = 't-wurzel'; const f = pick([2, 3, 5, 6, 7]), t = R(2, 6);
       return { ...simp, label: 'Vereinfache (x ist positiv)', q: `${rad(f)} · ${rad(f * t * t + 'x²')}`, vars: ['x'], f: e => f * t * e.x, maxTerms: 1, show: `${f * t}x`, ex: `${rad(f * f * t * t + 'x²')} = ${f * t}x` };
     }
-    const a = R(2, 9), b = R(2, 9), dd = R(2, 9), k = R(2, 5), c = R(1, 6), C = F(a * k, b * dd);
+    EK = 't-bruchterm'; const a = R(2, 9), b = R(2, 9), dd = R(2, 9), k = R(2, 5), c = R(1, 6), C = F(a * k, b * dd);
     return { ...simp, q: `${fr(`${a}x²`, `${b}(x + ${c})`)} : ${fr(`${dd}x`, `${k}x + ${k * c}`)}`, vars: ['x'], f: e => C[0] / C[1] * e.x, maxTerms: 1, allowParen: true,
       show: C[1] === 1 ? poly([[C[0], 'x']]) : fr(poly([[C[0], 'x']]), C[1]), ex: `Mit dem Kehrwert multiplizieren; ${k}x + ${k * c} = ${k}(x + ${c}) kürzt sich weg` };
   }
@@ -479,17 +493,17 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   function genGleichung(d) {
     for (let t = 0; t < 300; t++) {
       let q, L, Rr;
-      if (d < 20) { const x0 = R(-9, 9), a = R(2, 9) * sgn(), b = nz(-20, 20); q = `${lin(a, b)} = ${fmt(a * x0 + b)}`; L = [F(a), F(b)]; Rr = [F(0), F(a * x0 + b)]; }
-      else if (d < 35) { const a = nz(-9, 9), c = nz(-9, 9), b = R(-15, 15), e = R(-15, 15); q = `${lin(a, b)} = ${lin(c, e)}`; L = [F(a), F(b)]; Rr = [F(c), F(e)]; }
+      if (d < 20) { EK = 'g-einfach'; const x0 = R(-9, 9), a = R(2, 9) * sgn(), b = nz(-20, 20); q = `${lin(a, b)} = ${fmt(a * x0 + b)}`; L = [F(a), F(b)]; Rr = [F(0), F(a * x0 + b)]; }
+      else if (d < 35) { EK = 'g-beidseitig'; const a = nz(-9, 9), c = nz(-9, 9), b = R(-15, 15), e = R(-15, 15); q = `${lin(a, b)} = ${lin(c, e)}`; L = [F(a), F(b)]; Rr = [F(c), F(e)]; }
       else if (d < 50) {
-        const a = R(2, 6), b = nz(-6, 6), c = R(1, 12), k = R(2, 6), e = nz(-6, 6), f = R(-10, 10);
+        EK = 'g-klammer'; const a = R(2, 6), b = nz(-6, 6), c = R(1, 12), k = R(2, 6), e = nz(-6, 6), f = R(-10, 10);
         q = `${a}(${lin(1, b)}) − ${c} = ${k}(${lin(1, -e)})${f ? (f < 0 ? ' − ' : ' + ') + Math.abs(f) : ''}`; L = [F(a), F(a * b - c)]; Rr = [F(k), F(-k * e + f)];
-      } else if (d < 65) { const a = nz(-7, 7), b = nz(-9, 9), p = R(2, 6), c = nz(-4, 4), e = R(-9, 9); q = `${fr(lin(a, b), p)} = ${lin(c, e)}`; L = [F(a, p), F(b, p)]; Rr = [F(c), F(e)]; }
+      } else if (d < 65) { EK = 'g-bruch'; const a = nz(-7, 7), b = nz(-9, 9), p = R(2, 6), c = nz(-4, 4), e = R(-9, 9); q = `${fr(lin(a, b), p)} = ${lin(c, e)}`; L = [F(a, p), F(b, p)]; Rr = [F(c), F(e)]; }
       else if (d < 80) {
-        const a1 = R(1, 5), b1 = nz(-9, 9), p = R(2, 6), a2 = R(1, 5), b2 = nz(-9, 9), r = R(2, 6), c = R(-5, 5); if (p === r) continue;
+        EK = 'g-bruch'; const a1 = R(1, 5), b1 = nz(-9, 9), p = R(2, 6), a2 = R(1, 5), b2 = nz(-9, 9), r = R(2, 6), c = R(-5, 5); if (p === r) continue;
         q = `${fr(lin(a1, b1), p)} − ${fr(lin(a2, b2), r)} = ${fmt(c)}`; L = [fs(F(a1, p), F(a2, r)), fs(F(b1, p), F(b2, r))]; Rr = [F(0), F(c)];
       } else {
-        const a1 = R(1, 9), b1 = nz(-9, 9), p = R(2, 7), a2 = R(1, 6), b2 = nz(-11, 11), r = R(2, 7), a3 = R(1, 5), b3 = nz(-9, 9), s = R(2, 6);
+        EK = 'g-bruch'; const a1 = R(1, 9), b1 = nz(-9, 9), p = R(2, 7), a2 = R(1, 6), b2 = nz(-11, 11), r = R(2, 7), a3 = R(1, 5), b3 = nz(-9, 9), s = R(2, 6);
         if (p === r) continue;
         q = `${fr(lin(a1, b1), p)} − ${fr(lin(a2, b2), r)} = ${fr(lin(a3, b3), s)}`;
         L = [fs(F(a1, p), F(a2, r)), fs(F(b1, p), F(b2, r))]; Rr = [F(a3, s), F(b3, s)];
@@ -508,20 +522,20 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   const divisors = n => { let c = 0; for (let i = 1; i <= n; i++) if (n % i === 0) c++; return c; };
   function coprime(a, b) { let m, n; do { m = R(a, b); n = R(a, b); } while (m === n || gcd(m, n) !== 1); return [m, n]; }
   function genTeiler(d) {
-    if (d < 20) { const g = R(2, 12), [m, n] = coprime(2, 9); return { label: 'Berechne den ggT', q: `ggT(${g * m}, ${g * n})`, ans: g, kind: 'num', ex: `${g * m} = ${g} · ${m}, ${g * n} = ${g} · ${n}` }; }
-    if (d < 35) { const a = R(4, 30), b = R(4, 30); if (a === b) return genTeiler(d); return { label: 'Berechne das kgV', q: `kgV(${a}, ${b})`, ans: lcm(a, b), kind: 'num', ex: `kgV = ${a} · ${b} : ggT = ${a * b} : ${gcd(a, b)}` }; }
-    if (d < 50) { const n = R(12, 100); return { label: 'Wie viele Teiler hat die Zahl?', q: String(n), ans: divisors(n), kind: 'num', ex: 'Teiler paarweise suchen: 1 und ' + n + ', 2 und …' }; }
-    if (d < 62) { const g = R(2, 14), [m, n] = coprime(2, 15); return { label: 'Berechne das kgV', q: `kgV(${g * m}, ${g * n})`, ans: g * m * n, kind: 'num', ex: `ggT = ${g}, kgV = ${g * m} · ${n}` }; }
+    if (d < 20) { EK = 'z-ggt'; const g = R(2, 12), [m, n] = coprime(2, 9); return { label: 'Berechne den ggT', q: `ggT(${g * m}, ${g * n})`, ans: g, kind: 'num', ex: `${g * m} = ${g} · ${m}, ${g * n} = ${g} · ${n}` }; }
+    if (d < 35) { EK = 'z-kgv'; const a = R(4, 30), b = R(4, 30); if (a === b) return genTeiler(d); return { label: 'Berechne das kgV', q: `kgV(${a}, ${b})`, ans: lcm(a, b), kind: 'num', ex: `kgV = ${a} · ${b} : ggT = ${a * b} : ${gcd(a, b)}` }; }
+    if (d < 50) { EK = 'z-anzahl'; const n = R(12, 100); return { label: 'Wie viele Teiler hat die Zahl?', q: String(n), ans: divisors(n), kind: 'num', ex: 'Teiler paarweise suchen: 1 und ' + n + ', 2 und …' }; }
+    if (d < 62) { EK = 'z-kgv'; const g = R(2, 14), [m, n] = coprime(2, 15); return { label: 'Berechne das kgV', q: `kgV(${g * m}, ${g * n})`, ans: g * m * n, kind: 'num', ex: `ggT = ${g}, kgV = ${g * m} · ${n}` }; }
     if (d < 75) {
-      let n; do n = pick([2, 3, 5, 7]) ** R(1, 3) * pick([1, 3, 5, 7, 11]) ** R(1, 2) * pick([1, 1, 2, 3]); while (n > 2000 || n < 30);
+      EK = 'z-anzahl'; let n; do n = pick([2, 3, 5, 7]) ** R(1, 3) * pick([1, 3, 5, 7, 11]) ** R(1, 2) * pick([1, 1, 2, 3]); while (n > 2000 || n < 30);
       return { label: 'Wie viele Teiler hat die Zahl?', q: String(n), ans: divisors(n), kind: 'num', ex: 'Primfaktoren mit Exponenten: Anzahl Teiler = Produkt der (Exponent + 1)' };
     }
     if (d < 88) {
-      const e = [R(1, 4), R(0, 3), R(0, 2), R(0, 1)], P = [2, 3, 5, 7], n = P.reduce((s, p, i) => s * p ** e[i], 1), i0 = pick([0, 1, 2].filter(i => e[i] > 0));
+      EK = 'z-exponent'; const e = [R(1, 4), R(0, 3), R(0, 2), R(0, 1)], P = [2, 3, 5, 7], n = P.reduce((s, p, i) => s * p ** e[i], 1), i0 = pick([0, 1, 2].filter(i => e[i] > 0));
       const parts = P.map((p, i) => e[i] === 0 ? null : i === i0 ? `${p}<sup>?</sup>` : p + sup(e[i])).filter(Boolean);
       return { label: 'Setze den Exponenten ein', q: `${n} = ${parts.join(' · ')}`, ans: e[i0], kind: 'num', ex: `${n} = ${P.map((p, i) => e[i] ? p + sup(e[i]) : '').filter(Boolean).join(' · ')}` };
     }
-    const A = R(1, 6) * 50, B = A + R(1, 4) * 50, p = pick([3, 4, 5, 6]);
+    EK = 'z-zaehlen'; const A = R(1, 6) * 50, B = A + R(1, 4) * 50, p = pick([3, 4, 5, 6]);
     let c = 0, txt;
     if (Math.random() < .5) { for (let i = A; i <= B; i++) if (i % p === 0 && i % (2 * p)) c++; txt = `durch ${p}, aber nicht durch ${2 * p} teilbar`; }
     else { const qq = pick([2, 3, 4, 5].filter(x => x !== p)); for (let i = A; i <= B; i++) if (i % p === 0 && i % qq === 0) c++; txt = `durch ${p} und durch ${qq} teilbar`; }
@@ -530,32 +544,83 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 
   // ---------- 7 Muster und Wahrscheinlichkeit ----------
   function genMuster(d) {
-    if (d < 20) { const a = R(-5, 15), k = nz(-6, 9); return { label: 'Wie heisst die nächste Zahl?', q: `${[0, 1, 2, 3].map(i => fmt(a + i * k)).join(', ')}, …`, ans: a + 4 * k, kind: 'num', ex: `Die Zahlen ändern sich immer um ${fmt(k)}` }; }
+    if (d < 20) { EK = 'p-folge'; const a = R(-5, 15), k = nz(-6, 9); return { label: 'Wie heisst die nächste Zahl?', q: `${[0, 1, 2, 3].map(i => fmt(a + i * k)).join(', ')}, …`, ans: a + 4 * k, kind: 'num', ex: `Die Zahlen ändern sich immer um ${fmt(k)}` }; }
     const k = R(2, 6), c = R(-1, 6), ctx = `Mauer 1: ${k + c} Würfel · Mauer 2: ${2 * k + c} Würfel · Mauer 3: ${3 * k + c} Würfel`;
-    if (d < 35) { const N = R(6, 20); return { label: 'Würfelmauern', ctx, q: `Mauer ${N}?`, unit: 'Würfel', ans: k * N + c, kind: 'num', ex: `Pro Mauer kommen ${k} Würfel dazu: ${k} · ${N} ${c < 0 ? '−' : '+'} ${Math.abs(c)}` }; }
+    if (d < 35) { EK = 'p-mauer'; const N = R(6, 20); return { label: 'Würfelmauern', ctx, q: `Mauer ${N}?`, unit: 'Würfel', ans: k * N + c, kind: 'num', ex: `Pro Mauer kommen ${k} Würfel dazu: ${k} · ${N} ${c < 0 ? '−' : '+'} ${Math.abs(c)}` }; }
+    if (d < 50) EK = 'p-term';
     if (d < 50) return { label: 'Würfelmauern: Term für Mauer x', ctx, q: 'Mauer x?', kind: 'term', simplify: true, vars: ['x'], f: e => k * e.x + c, maxTerms: c ? 2 : 1, show: lin(k, c), ex: `Pro Mauer ${k} Würfel mehr, Mauer 0 hätte ${fmt(c)}` };
     let ans, ctx2, q, ex;
     if (d < 62) {
-      const A = R(1, 5) * 50, B = A + R(1, 4) * 50, p = pick([3, 4, 5]); let c = 0;
+      EK = 'w-bereich'; const A = R(1, 5) * 50, B = A + R(1, 4) * 50, p = pick([3, 4, 5]); let c = 0;
       for (let i = A; i <= B; i++) if (i % p === 0 && i % (2 * p)) c++;
       ans = F(c, B - A + 1); ctx2 = `Aus den Zahlen von ${A} bis und mit ${B} wird zufällig eine gezogen.`; q = `P(durch ${p}, aber nicht durch ${2 * p} teilbar)`; ex = `${c} günstige von ${B - A + 1} möglichen Zahlen`;
     } else if (d < 75) {
-      let ds; do ds = [R(1, 9), R(1, 9), R(1, 9)]; while (new Set(ds).size < 3);
+      EK = 'w-ziffern'; let ds; do ds = [R(1, 9), R(1, 9), R(1, 9)]; while (new Set(ds).size < 3);
       const perms = [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]].map(p => 100 * ds[p[0]] + 10 * ds[p[1]] + ds[p[2]]);
       const [txt, fn] = pick([['durch 4 teilbar', n => n % 4 === 0], ['gerade', n => n % 2 === 0], ['grösser als 500', n => n > 500], ['durch 6 teilbar', n => n % 6 === 0]]);
       const c = perms.filter(fn).length; if (c === 0 || c === 6) return genMuster(d);
       ans = F(c, 6); ctx2 = `Aus den Ziffern ${ds.join(', ')} wird zufällig eine dreistellige Zahl gebildet. Jede Ziffer kommt genau einmal vor.`; q = `P(Zahl ist ${txt})`; ex = `6 mögliche Zahlen, davon ${c} passend: ${perms.filter(fn).join(', ')}`;
     } else if (d < 88) {
-      const S = ['Stern', 'Herz', 'Mond'], wheel = n => { const c = [0, 0, 0]; for (let i = 0; i < n; i++) c[R(0, 2)]++; return c; };
+      EK = 'w-raeder'; const S = ['Stern', 'Herz', 'Mond'], wheel = n => { const c = [0, 0, 0]; for (let i = 0; i < n; i++) c[R(0, 2)]++; return c; };
       let w1, w2, n1, n2, fav; do { n1 = R(3, 6); n2 = R(4, 8); w1 = wheel(n1); w2 = wheel(n2); fav = w1.reduce((s, c, i) => s + c * w2[i], 0); } while (!fav);
       const desc = w => S.map((s, i) => w[i] ? `${w[i]}× ${s}` : '').filter(Boolean).join(', ');
       ans = F(fav, n1 * n2); ctx2 = `Zwei Glücksräder mit gleich grossen Feldern werden je einmal gedreht. Rad 1: ${desc(w1)}. Rad 2: ${desc(w2)}.`; q = 'P(beide zeigen dasselbe Symbol)'; ex = `Für jedes Symbol P(Rad 1) · P(Rad 2), dann addieren: ${fav}/${n1 * n2}`;
     } else {
-      if (Math.random() < .5) { const s = R(3, 11), c = 6 - Math.abs(s - 7); ans = F(c, 36); ctx2 = 'Zwei Spielwürfel werden geworfen.'; q = `P(Augensumme ${s})`; ex = `${c} von 36 Kombinationen`; }
-      else { const k = R(2, 5); let c = 0; for (let a = 1; a <= 6; a++) for (let b = 1; b <= 6; b++) if ((a * b) % k === 0) c++; ans = F(c, 36); ctx2 = 'Zwei Spielwürfel werden geworfen. Die Augenzahlen werden multipliziert.'; q = `P(Produkt durch ${k} teilbar)`; ex = `${c} von 36 Kombinationen`; }
+      if (Math.random() < .5) { EK = 'w-wuerfel'; const s = R(3, 11), c = 6 - Math.abs(s - 7); ans = F(c, 36); ctx2 = 'Zwei Spielwürfel werden geworfen.'; q = `P(Augensumme ${s})`; ex = `${c} von 36 Kombinationen`; }
+      else { EK = 'w-wuerfel'; const k = R(2, 5); let c = 0; for (let a = 1; a <= 6; a++) for (let b = 1; b <= 6; b++) if ((a * b) % k === 0) c++; ans = F(c, 36); ctx2 = 'Zwei Spielwürfel werden geworfen. Die Augenzahlen werden multipliziert.'; q = `P(Produkt durch ${k} teilbar)`; ex = `${c} von 36 Kombinationen`; }
     }
     return { label: 'Wahrscheinlichkeit als gekürzter Bruch', ctx: ctx2, q, ans, kind: 'frac', show: fh(ans), ex };
   }
+
+
+  // ---------- Erklärungen pro Aufgabentyp: [Titel, Regel, Beispiel] ----------
+  const EXPL = {
+    'r-punkt': ['Punkt vor Strich', 'Rechne zuerst Mal und Geteilt, dann Plus und Minus. Minus mal Minus ergibt Plus, Minus mal Plus ergibt Minus.', '20 + 4 · (−3) − 5<br>= 20 + (−12) − 5<br>= 20 − 12 − 5 = 3'],
+    'r-klammer': ['Klammern zuerst', 'Rechne zuerst aus, was in der Klammer steht. Danach gilt wieder Punkt vor Strich.', '(7 − 15) · (−3)<br>= (−8) · (−3) = 24'],
+    'r-potenz': ['Potenzen', 'a<sup>n</sup> heisst: a wird n-mal mit sich selbst multipliziert. Jede Zahl hoch 0 ergibt 1. Ist die Basis negativ, wird das Ergebnis bei geradem Exponenten positiv, bei ungeradem negativ. Bei Dezimalzahlen ohne Komma rechnen und am Schluss die Nachkommastellen setzen.', '(−2)³ = (−2) · (−2) · (−2) = −8<br>(−2)<sup>4</sup> = 16<br>5⁰ = 1<br>0.3² = 0.09 (3² = 9, zwei Nachkommastellen)'],
+    'r-wurzel': ['Wurzeln', '√a ist die positive Zahl, die mit sich selbst multipliziert a ergibt. Du darfst zusammenfassen: √a · √b = √(a · b) und √a : √b = √(a : b). Achtung: √a + √b ist nicht dasselbe wie √(a + b).', '√50 · √2 = √100 = 10<br>√405 : √5 = √81 = 9<br>√0.49 = 0.7'],
+    'r-zehner': ['Zehnerpotenzen', 'Vorne steht eine Zahl zwischen 1 und 10. Der Exponent zählt, um wie viele Stellen das Komma wandert: bei grossen Zahlen positiv, bei Zahlen unter 1 negativ. Tausend = 10³, Million = 10<sup>6</sup>, Milliarde = 10<sup>9</sup>.', '20.5 Milliarden = 20.5 · 10<sup>9</sup> = 2.05 · 10<sup>10</sup><br>0.00034 = 3.4 · 10<sup>−4</sup>'],
+    'r-reihenfolge': ['Reihenfolge der Rechenarten', 'Klammern, dann Potenzen, dann Punkt (· und :), dann Strich (+ und −). Achtung: (−4)² = 16, aber −4² = −16.', '(3 + 3 · 2) − (−6)² : 3²<br>= 9 − 36 : 9<br>= 9 − 4 = 5'],
+    'b-kuerzen': ['Kürzen', 'Teile Zähler und Nenner durch dieselbe Zahl, am schnellsten durch den grössten gemeinsamen Teiler (ggT). Vollständig gekürzt ist der Bruch, wenn Zähler und Nenner keinen gemeinsamen Teiler mehr haben.', `${fr(36, 48)}: ggT = 12 → ${fr(3, 4)}`],
+    'b-addieren': ['Brüche addieren und subtrahieren', 'Bringe die Brüche auf denselben Nenner (kgV der Nenner). Dann Zähler addieren oder subtrahieren, der Nenner bleibt. Am Schluss kürzen.', `${fr(3, 4)} − ${fr(1, 6)} = ${fr(9, 12)} − ${fr(2, 12)} = ${fr(7, 12)}`],
+    'b-mult': ['Brüche multiplizieren und dividieren', 'Mal: Zähler mal Zähler, Nenner mal Nenner. Geteilt: mit dem Kehrwert des zweiten Bruchs multiplizieren. Kürze vor dem Ausmultiplizieren, das spart Arbeit.', `${fr(5, 6)} : ${fr(10, 3)} = ${fr(5, 6)} · ${fr(3, 10)} = ${fr(1, 4)}`],
+    'b-mehrere': ['Mehrere Brüche', 'Klammern zuerst, dann Punkt vor Strich. Minus vor einem negativen Bruch wird Plus. Für Plus und Minus brauchst du den Hauptnenner.', `${fr(1, 2)} + ${fr(2, 3)} · (−${fr(3, 4)}) = ${fr(1, 2)} − ${fr(1, 2)} = 0`],
+    'b-x': ['Unbekannte Zahl x', 'Bei einer Summe ziehst du alle bekannten Brüche vom Ergebnis ab. Bei einem Produkt teilst du das Ergebnis durch das Produkt der bekannten Brüche, multiplizierst also mit dem Kehrwert.', `${fr(1, 2)} + ${fr(1, 3)} + x = 1 → x = 1 − ${fr(5, 6)} = ${fr(1, 6)}<br>${fr(2, 3)} · x = −1 → x = −1 · ${fr(3, 2)} = −${fr(3, 2)}`],
+    'm-umrechnen': ['Einheiten umrechnen', 'Zur kleineren Einheit multiplizieren, zur grösseren dividieren. Längen: Faktor 10 pro Stufe (mm, cm, dm, m). Flächen: Faktor 100 (cm², dm², m²). Volumen: Faktor 1000 (cm³, dm³, m³). 1 dm³ = 1 l, 1 cm³ = 1 ml, 1 l = 10 dl = 100 cl = 1000 ml. 1 h = 60 min = 3600 s.', '2.5 m² = 2.5 · 10 000 cm² = 25 000 cm²<br>750 cm³ = 750 ml = 0.75 l'],
+    'm-summe': ['Masse addieren', 'Rechne zuerst jede Grösse in die verlangte Einheit um. Erst dann addieren.', '1.5 l + 25 cl + 3 dl<br>= 15 dl + 2.5 dl + 3 dl = 20.5 dl'],
+    'm-prozentvon': ['Prozent von einer Grösse', 'p % von G = G · p : 100. Rechne die Grösse zuerst in die Zieleinheit um. 10 % ist ein Zehntel, 5 % die Hälfte davon.', '35 % von 2 h = 35 % von 120 min<br>10 % = 12 min, 5 % = 6 min<br>35 % = 3 · 12 + 6 = 42 min'],
+    'm-vergleich': ['Vergleichen', 'Bringe beide Seiten in dieselbe Einheit oder Form. Brüche vergleichst du mit gleichem Nenner, Potenzen von Dezimalzahlen rechnest du aus. √a + √b ist immer grösser als √(a + b).', `47 cl = 470 ml = 470 cm³ → =<br>${fr(4, 5)} = ${fr(48, 60)}, ${fr(11, 12)} = ${fr(55, 60)} → &lt;`],
+    'm-prozentsatz': ['Prozentsatz', 'Prozentsatz = Prozentwert : Grundwert · 100. Der Grundwert ist der Wert am Anfang, also 100 %.', '200 Mitglieder, Abnahme um 14<br>14 : 200 · 100 = 7 %'],
+    'm-grundwert': ['Grundwert', 'Rechne über 1 %: Prozentwert durch den Prozentsatz teilen, dann mal 100.', '30 % sind 45 CHF<br>1 % = 1.5 CHF<br>100 % = 150 CHF'],
+    'm-mehrfach': ['Mehrere Prozentänderungen', 'Jede Änderung bezieht sich auf den neuen Wert. Plus 20 % heisst mal 1.2, minus 20 % heisst mal 0.8. Plus 20 % und danach minus 20 % ergibt nicht den alten Wert.', '500 CHF · 1.2 · 0.8 = 480 CHF'],
+    't-einsetzen': ['Einsetzen', 'Ersetze jede Variable durch ihre Zahl. Setze negative Zahlen in Klammern. Zwischen Zahl und Variable steht ein unsichtbares Malzeichen.', 'a = −2, b = 5<br>b² − ab = 5² − (−2) · 5 = 25 + 10 = 35'],
+    't-bestimmen': ['Variable bestimmen', 'Setze die bekannte Zahl ein und löse nach der gesuchten Variable auf.', 'b − 3a = 7 und a = 4<br>b − 12 = 7 → b = 19'],
+    't-zusammenfassen': ['Zusammenfassen', 'Fasse nur gleichartige Terme zusammen: a mit a, b mit b, x² mit x². Das Vorzeichen gehört zum Term dahinter.', '3a − 5b − a + 2b = 2a − 3b'],
+    't-klammer': ['Klammern auflösen', 'Die Zahl vor der Klammer multipliziert jeden Term in der Klammer. Ein Minus vor der Klammer dreht alle Vorzeichen in der Klammer um.', '(2a − b) − 3(a − 2b)<br>= 2a − b − 3a + 6b = −a + 5b'],
+    't-monom': ['Produkte und Quotienten', 'Rechne die Zahlen für sich. Bei gleichen Variablen: beim Multiplizieren die Exponenten addieren, beim Dividieren subtrahieren. Bei Exponent 0 fällt die Variable weg.', '12a³b² : (−4ab) = −3a²b<br>3x² · (−2xy) = −6x³y'],
+    't-potenz': ['Potenz eines Produkts', 'Jeder Faktor in der Klammer wird potenziert. Bei einer Potenz von einer Potenz multiplizierst du die Exponenten.', '(−3a²b)² = 9a<sup>4</sup>b²'],
+    't-klammermal': ['Klammer mal Klammer', 'Multipliziere jeden Term der ersten Klammer mit jedem Term der zweiten. Fasse danach zusammen.', '(x + 3)(x − 5)<br>= x² − 5x + 3x − 15<br>= x² − 2x − 15'],
+    't-binom': ['Binomische Formeln', '(a + b)² = a² + 2ab + b² und (a − b)² = a² − 2ab + b². Vergiss das mittlere Glied 2ab nicht.', '(2x − 3)² = 4x² − 12x + 9'],
+    't-wurzel': ['Wurzeln aus Termen', 'Fasse unter der Wurzel zuerst zusammen. Für positive x gilt √(x²) = x und √(k²x²) = kx. Zwei Wurzeln darfst du zu einer zusammenfassen.', '√((5x)² − 9x²) = √(16x²) = 4x<br>√2 · √(18x²) = √(36x²) = 6x'],
+    't-bruchterm': ['Bruchterme dividieren', 'Dividieren heisst mit dem Kehrwert multiplizieren. Klammere aus, damit gleiche Faktoren sichtbar werden, und kürze sie.', `${fr('2x²', '3(x + 1)')} : ${fr('4x', '5x + 5')} = ${fr('2x² · 5(x + 1)', '3(x + 1) · 4x')} = ${fr('5x', 6)}`],
+    'g-einfach': ['Einfache Gleichung', 'Mache auf beiden Seiten dasselbe, bis x allein steht: zuerst die Zahl ohne x wegbringen, dann durch die Zahl vor x teilen.', '4x − 7 = 13 &nbsp;| + 7<br>4x = 20 &nbsp;| : 4<br>x = 5'],
+    'g-beidseitig': ['x auf beiden Seiten', 'Bringe alle x-Terme auf eine Seite und alle Zahlen auf die andere. Teile am Schluss durch die Zahl vor x. Das Ergebnis darf ein Bruch sein.', `5x + 2 = 2x − 7 &nbsp;| − 2x − 2<br>3x = −9 → x = −3<br>4x = 6 → x = ${fr(3, 2)}`],
+    'g-klammer': ['Gleichung mit Klammern', 'Löse zuerst alle Klammern auf und fasse jede Seite zusammen. Dann wie bei einer einfachen Gleichung weiter.', '3(x + 2) − 4 = 2(x − 1)<br>3x + 2 = 2x − 2<br>x = −4'],
+    'g-bruch': ['Gleichung mit Brüchen', 'Multipliziere die ganze Gleichung mit dem Hauptnenner. Setze dabei jeden Zähler in Klammern, besonders nach einem Minus. Danach ist die Gleichung bruchfrei.', `${fr('x + 1', 2)} − ${fr('x − 3', 3)} = 1 &nbsp;| · 6<br>3(x + 1) − 2(x − 3) = 6<br>x + 9 = 6 → x = −3`],
+    'z-ggt': ['Grösster gemeinsamer Teiler', 'Zerlege beide Zahlen in Primfaktoren. Der ggT ist das Produkt der Primfaktoren, die in beiden Zahlen vorkommen.', '36 = 2 · 2 · 3 · 3<br>60 = 2 · 2 · 3 · 5<br>ggT = 2 · 2 · 3 = 12'],
+    'z-kgv': ['Kleinstes gemeinsames Vielfaches', 'kgV(a, b) = a · b : ggT(a, b). Oder: Vielfache der grösseren Zahl aufzählen, bis eines durch die kleinere teilbar ist.', 'kgV(154, 84): ggT = 14<br>154 · 84 : 14 = 154 · 6 = 924'],
+    'z-anzahl': ['Anzahl Teiler', 'Zerlege in Primfaktoren mit Exponenten. Anzahl Teiler = (Exponent + 1) · (Exponent + 1) · … Bei kleinen Zahlen kannst du die Teiler auch paarweise suchen.', '441 = 3² · 7²<br>(2 + 1) · (2 + 1) = 9 Teiler<br>36: 1·36, 2·18, 3·12, 4·9, 6·6 → 9 Teiler'],
+    'z-exponent': ['Primfaktorzerlegung', 'Teile die Zahl so oft wie möglich durch 2, dann durch 3, 5, 7 … Der Exponent zählt, wie oft eine Primzahl vorkommt.', '504 : 2 = 252 : 2 = 126 : 2 = 63<br>63 : 3 = 21 : 3 = 7<br>504 = 2³ · 3² · 7'],
+    'z-zaehlen': ['Zahlen in einem Bereich zählen', 'Suche die erste und die letzte passende Zahl und zähle in gleichen Abständen. «Durch 5, aber nicht durch 10» heisst: Endziffer 5. «Durch 3 und durch 4» heisst: durch 12.', '100 bis 200, durch 5 aber nicht durch 10:<br>105, 115, …, 195 → 10 Zahlen'],
+    'p-folge': ['Zahlenfolgen', 'Bestimme den Unterschied zwischen zwei Nachbarn. Bleibt er gleich, addierst du ihn immer wieder.', '3, 7, 11, 15 → immer + 4 → 19'],
+    'p-mauer': ['Figur Nummer n', 'Bestimme, wie viele Würfel pro Figur dazukommen (k). Figur n hat dann k · n + c Würfel. c erhältst du, wenn du von Figur 1 das k abziehst.', '5, 8, 11 → k = 3, c = 5 − 3 = 2<br>Figur 15: 3 · 15 + 2 = 47'],
+    'p-term': ['Term für Figur x', 'Der Term lautet k · x + c: k ist die Zunahme pro Figur, c = Figur 1 minus k. Kontrolliere mit x = 1 und x = 2.', '5, 8, 11 → 3x + 2<br>Kontrolle: x = 1 ergibt 5, x = 2 ergibt 8'],
+    'w-bereich': ['Wahrscheinlichkeit im Zahlenbereich', 'P = günstige Fälle : mögliche Fälle. Von A bis und mit B gibt es B − A + 1 Zahlen.', `100 bis 200: 101 Zahlen<br>Endziffer 5: 10 Zahlen → P = ${fr(10, 101)}`],
+    'w-ziffern': ['Zahlen aus Ziffern', 'Aus 3 verschiedenen Ziffern entstehen 3 · 2 · 1 = 6 Zahlen. Schreibe alle auf und zähle die passenden. Durch 4 teilbar ist eine Zahl, wenn ihre letzten zwei Ziffern durch 4 teilbar sind.', `2, 3, 6: 236, 263, 326, 362, 623, 632<br>durch 4: 236 und 632 → P = ${fr(2, 6)} = ${fr(1, 3)}`],
+    'w-raeder': ['Zwei Glücksräder', 'Berechne für jedes Symbol P(Rad 1) · P(Rad 2). Addiere am Schluss die Ergebnisse aller Symbole.', `Stern: ${fr(1, 4)} · ${fr(2, 5)} = ${fr(2, 20)}<br>Herz: ${fr(3, 4)} · ${fr(1, 5)} = ${fr(3, 20)}<br>P = ${fr(5, 20)} = ${fr(1, 4)}`],
+    'w-wuerfel': ['Zwei Würfel', 'Es gibt 6 · 6 = 36 gleich wahrscheinliche Paare. Zähle die passenden Paare, am besten in einer 6×6-Tabelle.', `Augensumme 8: (2,6), (3,5), (4,4), (5,3), (6,2)<br>P = ${fr(5, 36)}`]
+  };
+  const explHtml = key => { const e = EXPL[key]; if (!e) return ''; return `<span class="badge" aria-hidden="true">i</span><div><div class="label" style="color:var(--accent-900)">Erklärung · ${e[0]}</div><p style="margin:6px 0 10px">${e[1]}</p><div class="exbox">${e[2]}</div></div>`; };
 
   const TOPICS = {
     rechnen: { name: 'Rechnen und Potenzen', ap: 'AP 2025 A1 · 2023 A1 · 2022 A1', gen: genRechnen },
@@ -566,6 +631,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     teiler: { name: 'Teiler und Vielfache', ap: 'AP 2025 A5', gen: genTeiler },
     muster: { name: 'Muster und Wahrscheinlichkeit', ap: 'AP 2025 A6 · 2024 A5 · 2023 A5', gen: genMuster }
   };
+  for (const k in TOPICS) { const g = TOPICS[k].gen; TOPICS[k].gen = d => { EK = ''; const it = g(d); it.key = EK; return it; }; }
 
   // ---------- Eingabe prüfen ----------
   const norm = s => s.replace(/\s+/g, '').replace(/[·×*]/g, '*').replace(/:/g, '/').replace(/[−–]/g, '-').replace(/,/g, '.').replace(/²/g, '^2').replace(/³/g, '^3').replace(/['’]/g, '');
@@ -663,7 +729,9 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     const t = state.topics[item.topic];
     // Schnell und richtig = 1, langsam und richtig sinkt bis 0.85, falsch = 0
     const expT = 6 + item.d * 0.25;
-    const score = ok ? (secs <= expT ? 1 : Math.max(0.85, 1 - 0.15 * (secs - expT) / (2 * expT))) : 0;
+    // Mit eingeblendeter Erklärung zählt eine richtige Antwort nur teilweise
+    const helped = !!item.helped;
+    const score = ok ? (helped ? 0.6 : secs <= expT ? 1 : Math.max(0.85, 1 - 0.15 * (secs - expT) / (2 * expT))) : 0;
     const K = t.n < 6 ? 14 : Math.max(3, 10 / Math.sqrt(1 + (t.n - 6) / 10));
     const before = stufe(t.theta);
     t.theta = clamp(t.theta + K * (score - item.p), 0, 105);
@@ -672,7 +740,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 
     sess.count++;
     let gained = 0;
-    if (ok) { sess.rightRun++; sess.wrongRun = 0; gained = Math.round(5 + item.d / 8) * (item.challenge ? 2 : 1) + Math.min(sess.rightRun - 1, 10); }
+    if (ok) { sess.rightRun++; sess.wrongRun = 0; gained = Math.round(5 + item.d / 8) * (item.challenge ? 2 : 1) + Math.min(sess.rightRun - 1, 10); if (helped) gained = Math.ceil(gained / 2); }
     else { sess.wrongRun++; sess.rightRun = 0; }
     state.xp += gained; sess.xp += gained;
     sess.log.push({ d: item.d, ok, th: t.theta });
@@ -686,7 +754,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     save();
 
     if (ok) {
-      $('feedback').innerHTML = `<span class="ok">Richtig. +${gained} XP${sess.rightRun >= 3 ? ` · ${sess.rightRun} in Folge` : ''}.${after > before ? ` Stufe ${after} erreicht.` : ''}</span>`;
+      $('feedback').innerHTML = `<span class="ok">Richtig${helped ? ' mit Erklärung' : ''}. +${gained} XP${sess.rightRun >= 3 ? ` · ${sess.rightRun} in Folge` : ''}.${after > before ? ` Stufe ${after} erreicht.` : ''}</span>`;
     } else {
       const sol = item.show !== undefined ? item.show : fmt(item.ans);
       $('feedback').innerHTML = `${res.msg ? `<span class="bad">${res.msg}</span><br>` : ''}<span class="bad">Richtig wäre: ${sol}${item.unit ? ' ' + item.unit : ''}</span><br><span class="ex">${item.ex || ''}</span>`;
@@ -751,6 +819,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     inp.placeholder = item.kind === 'frac' ? 'z. B. −7/4' : item.kind === 'term' ? 'z. B. 3x^2 − 5x' : '';
     $('ansBtn').disabled = false; $('ansBtn').textContent = 'Prüfen';
     $('feedback').innerHTML = '';
+    $('explBox').hidden = true; $('explBox').innerHTML = explHtml(item.key);
+    $('explBtn').textContent = 'Erklärung zeigen'; $('explBtn').parentNode.hidden = !EXPL[item.key];
     renderProgress(false);
     if (!choice) inp.focus();
     shownAt = Date.now();
@@ -820,6 +890,11 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   $('ansForm').addEventListener('submit', e => { e.preventDefault(); submit($('ansInput').value); });
   document.addEventListener('keydown', e => { if (e.key === 'Enter' && awaitingNext && sess && !sess.roundPending && !$('play').hidden && $('roundEnd').hidden && document.activeElement !== $('ansBtn')) { e.preventDefault(); nextItem(); } });
   $('quitBtn').onclick = goHome;
+  $('explBtn').onclick = () => {
+    const box = $('explBox'), show = box.hidden;
+    box.hidden = !show; $('explBtn').textContent = show ? 'Erklärung ausblenden' : 'Erklärung zeigen';
+    if (show && !awaitingNext) item.helped = true;
+  };
   $('examBtn').onclick = showExamIntro;
   $('breakOk').onclick = () => { $('breakBanner').hidden = true; $('ansInput').focus(); };
   const onReset = () => {
@@ -945,6 +1020,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
       const why = r.empty ? 'Nicht beantwortet. ' : r.invalid ? 'Ungültige Eingabe. ' : r.msg ? r.msg + ' ' : '';
       $('exFb' + i).innerHTML = ok ? '<span class="ptbadge good">1 Pt. · richtig</span>'
         : `<span class="ptbadge ${r.empty ? 'warn' : 'bad'}">0 Pt.</span> ${why}Lösung: <strong>${sol}</strong><br><span class="ex">${it.ex || ''}</span>`;
+      if (EXPL[it.key]) $('exFb' + i).innerHTML += `<div style="margin-top:8px"><button class="explbtn" type="button" data-ek="${i}">Erklärung zeigen</button></div><div class="callout expl" hidden style="margin-top:8px">${explHtml(it.key)}</div>`;
     });
     const pts = per.reduce((a, b) => a + b, 0), note = noteOf(pts);
     state.exams = [{ date: dayKey(), pts, note }, ...(state.exams || [])].slice(0, 10);
@@ -963,11 +1039,15 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
         <button class="btn ghost" id="exAgain" type="button">Neue Probeprüfung</button><button class="btn ghost" id="exHome" type="button">Themenwahl</button></div></div>`;
     if (worst) $('exTrain').onclick = () => { $('exam').hidden = true; startSession(worst[0]); };
     $('exAgain').onclick = showExamIntro; $('exHome').onclick = goHome;
+    $('exam').querySelectorAll('[data-ek]').forEach(b => b.onclick = () => {
+      const box = b.parentNode.nextElementSibling, show = box.hidden;
+      box.hidden = !show; b.textContent = show ? 'Erklärung ausblenden' : 'Erklärung zeigen';
+    });
     renderStats(); scrollTo(0, 0);
   }
 
   // Testzugang für automatische Prüfungen
-  window.__kt = { TOPICS, check: (it, raw) => { item = it; return check(raw); }, exam: () => exam, submitExam };
+  window.__kt = { TOPICS, EXPL, check: (it, raw) => { item = it; return check(raw); }, exam: () => exam, submitExam };
 
   renderHome(); renderStats();
 })();
