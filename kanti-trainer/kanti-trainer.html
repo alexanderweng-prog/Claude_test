@@ -134,6 +134,9 @@ svg.grid.click { cursor: crosshair; }
 .steps { margin: 0 0 12px; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; font-family: var(--f-mono); font-size: 18px; }
 .steps li { display: flex; gap: 10px; align-items: baseline; }
 .steps li::before { content: "✓"; color: var(--status-good); font-weight: 700; }
+.steps li.note { color: var(--muted); }
+.steps li.note::before { content: "·"; color: var(--muted); }
+.stephint { margin: 0 0 10px; font-size: 14px; color: var(--muted); max-width: 62ch; }
 .stepmsg { margin: 10px 0 0; min-height: 1.5em; }
 .stepmsg.bad { color: var(--status-bad); font-weight: 600; }
 .stepmsg.ok { color: var(--status-good); }
@@ -307,6 +310,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
             <button class="btn" id="ansBtn" type="submit">Prüfen</button>
           </form>
           <div id="stepArea" hidden>
+            <p class="stephint">Schreibe jeden Zwischenschritt in eine neue Zeile. Nebenrechnungen mit «=» prüft die App auch. Zeilen, die sie nicht lesen kann, werden notiert, aber nicht geprüft.</p>
             <ol class="steps" id="stepList"></ol>
             <form class="answer" id="stepForm" autocomplete="off">
               <label class="field" for="stepInput"><input id="stepInput" type="text" inputmode="text" aria-label="Nächster Umformungsschritt" spellcheck="false" autocapitalize="off" placeholder="z. B. 3x − 6 = 2x"></label>
@@ -2856,7 +2860,7 @@ var qrcode = function() {
       return { ...simp, label: 'Vereinfache (x ist positiv)', q: `${rad(f)} · ${rad(f * t * t + 'x²')}`, vars: ['x'], f: e => f * t * e.x, maxTerms: 1, show: `${f * t}x`, ex: `${rad(f * f * t * t + 'x²')} = ${f * t}x` };
     }
     EK = 't-bruchterm'; const a = R(2, 9), b = R(2, 9), dd = R(2, 9), k = R(2, 5), c = R(1, 6), C = F(a * k, b * dd);
-    return { ...simp, q: `${fr(`${a}x²`, `${b}(x + ${c})`)} : ${fr(`${dd}x`, `${k}x + ${k * c}`)}`, vars: ['x'], f: e => C[0] / C[1] * e.x, maxTerms: 1, allowParen: true,
+    return { ...simp, q: `${fr(`${a}x²`, `${b}(x + ${c})`)} : ${fr(`${dd}x`, `${k}x + ${k * c}`)}`, vars: ['x'], f: e => C[0] / C[1] * e.x, maxTerms: 1,
       show: C[1] === 1 ? poly([[C[0], 'x']]) : fr(poly([[C[0], 'x']]), C[1]), ex: `Mit dem Kehrwert multiplizieren; ${k}x + ${k * c} = ${k}(x + ${c}) kürzt sich weg` };
   }
 
@@ -3417,29 +3421,100 @@ var qrcode = function() {
     $('feedback').innerHTML = '';
     $('explBox').hidden = true; $('explBox').innerHTML = explHtml(item.key);
     $('explBtn').textContent = 'Erklärung zeigen'; $('explBtn').parentNode.hidden = !EXPL[item.key];
-    // Schrittmodus nur bei Gleichungen
+    // Schrittmodus: in allen Themen ausser bei Auswahlaufgaben
     item.stepErr = 0; $('stepList').innerHTML = ''; $('stepMsg').textContent = ''; $('stepMsg').className = 'stepmsg';
     $('stepInput').value = ''; $('stepInput').disabled = false; $('stepBtn').disabled = false;
-    $('stepToggle').hidden = !item.eqf;
+    $('stepToggle').hidden = item.kind === 'choice';
     applyStepMode();
     renderProgress(false);
     if (!choice) (stepOn() ? $('stepInput') : inp).focus();
     shownAt = Date.now();
   }
 
-  const stepOn = () => !!(item && item.eqf && state.stepMode);
+  const stepOn = () => !!(item && item.kind !== 'choice' && state.stepMode);
   function applyStepMode() {
     const on = stepOn();
     $('stepArea').hidden = !on; $('ansForm').hidden = on || item.kind === 'choice'; $('chipRow').hidden = on;
     $('stepToggle').textContent = on ? 'Nur das Ergebnis eingeben' : 'Schritt für Schritt lösen';
-    $('stepChips').innerHTML = on ? ['x', '=', '(', ')', '/', '−'].map(c => `<button class="chip" type="button" data-v="${c}">${c}</button>`).join('') : '';
+    const sc = item.eqf ? ['x', '=', '(', ')', '/', '−'] : [...new Set([...chipsFor(item), '='])];
+    $('stepInput').placeholder = item.eqf ? 'z. B. 3x − 6 = 2x' : ({ term: 'z. B. 2a − b − 3a + 6b', eq: 'z. B. x + 2x = 30', pt: 'z. B. x: 3 + 4 = 7' })[item.kind] || 'z. B. 17 − 15 − 15';
+    $('stepChips').innerHTML = on ? sc.map(c => `<button class="chip" type="button" data-v="${c}">${c}</button>`).join('') : '';
     $('stepChips').querySelectorAll('button').forEach(b => { b.onmousedown = e => e.preventDefault(); b.onclick = () => insert(b.dataset.v, $('stepInput')); });
   }
   const isInt = n => Number.isInteger(n);
-  // Jede Zeile muss gleichwertig zur Ausgangsgleichung sein; fertig ist die Aufgabe bei «x = gekürzter Bruch»
+  // Schrittmodus für alle Aufgaben: Jede Zeile muss denselben Wert (bzw. einen gleichwertigen Term) haben wie die Aufgabe.
   function stepSubmit() {
     if (awaitingNext) { if (!sess.roundPending) nextItem(); return; }
-    const raw = $('stepInput').value.trim(), msg = $('stepMsg'); if (!raw) return;
+    const raw = $('stepInput').value.trim(); if (!raw) return;
+    if (item.eqf) stepEquation(raw); else stepGeneral(raw);
+  }
+  function stepGeneral(raw) {
+    const msg = $('stepMsg');
+    const say = (cls, t) => { msg.className = 'stepmsg ' + cls; msg.textContent = t; };
+    const add = cls => { const li = document.createElement('li'); li.className = cls; li.textContent = pretty(raw.replace(/\s+/g, ' ')); $('stepList').append(li); $('stepInput').value = ''; };
+    const note = t => { add('note'); say('', t || 'Notiert. Diese Zeile kann die App nicht prüfen.'); };
+    const bad = t => { item.stepErr++; say('bad', t); };
+    const finish = ans => {
+      add('');
+      say('ok', item.stepErr ? `Gelöst, mit ${item.stepErr} fehlerhaften Schritt${item.stepErr > 1 ? 'en' : ''}.` : 'Gelöst, alle Schritte korrekt.');
+      if (item.stepErr) item.helped = true;
+      submit(ans);
+    };
+    // Beschriftungen, Einheit am Schluss und Prozent in rechenbare Form bringen
+    let s = raw.replace(/^[xy]\s*:\s*/i, '');
+    if (item.unit && s.endsWith(item.unit)) s = s.slice(0, -item.unit.length).trim();
+    s = s.replace(/(\d)\s*%\s*von\s*/gi, '$1/100*').replace(/(\d)\s*%/g, '$1/100');
+    const vars = item.vars || (item.kind === 'eq' ? ['x'] : []);
+    const parse = t => { try { const a = parseExpr(t); return [...varsOf(a)].every(v => vars.includes(v)) ? a : null; } catch (e) { return null; } };
+    const same = (fa, fb) => {
+      for (let k = 0; k < 6; k++) {
+        const e = {}; vars.forEach(v => { e[v] = 0.37 + Math.random() * 3; });
+        const a = fa(e), b = fb(e); if (!Number.isFinite(a) || !Number.isFinite(b)) continue;
+        if (!close(a, b)) return false;
+      }
+      return true;
+    };
+    if (item.kind === 'eq') {
+      if (!s.includes('=')) return note('Notiert. Schreibe am Schluss die ganze Gleichung mit «=».');
+      if (!/x/i.test(s)) {
+        const P = s.split('=').map(parse);
+        if (P.some(x => !x)) return note();
+        if (!P.every(x => close(ev(x, {}), ev(P[0], {})))) return bad('Diese Rechnung stimmt nicht: Die Seiten links und rechts vom «=» sind nicht gleich.');
+        add(''); return say('ok', 'Diese Nebenrechnung stimmt. Schreibe am Schluss die Gleichung mit x.');
+      }
+      const r = check(s);
+      if (r.invalid) return note();
+      if (r.ok) return finish(s);
+      return bad(r.msg || 'Diese Gleichung passt nicht zum Text. Prüfe, wie du die Grössen mit x ausgedrückt hast.');
+    }
+    const parts = s.split('=');
+    if (parts.length >= 2) {
+      const P = parts.map(parse);
+      if (P.some(x => !x)) return note();
+      if (!P.every(x => same(e => ev(P[0], e), e => ev(x, e)))) return bad('Diese Rechnung stimmt nicht: Die Seiten links und rechts vom «=» sind nicht gleich.');
+      // Rechenkette: Ist das letzte Glied schon die Lösung, ist die Aufgabe fertig
+      const last = parts[parts.length - 1].trim(), lastAst = P[P.length - 1];
+      const target = item.kind === 'term' ? item.f : () => (item.kind === 'frac' ? item.ans[0] / item.ans[1] : item.ans);
+      if (item.kind !== 'pt' && same(e => ev(lastAst, e), target) && check(last).ok) return finish(last);
+      add(''); return say('ok', 'Diese Rechnung stimmt.');
+    }
+    if (item.kind === 'pt') {
+      const r = check(s);
+      if (r.invalid) return note('Notiert. Schreibe am Schluss den Punkt als x / y.');
+      return r.ok ? finish(s) : bad('Dieser Punkt stimmt nicht. Prüfe deine Nebenrechnungen.');
+    }
+    const A = parse(s);
+    if (!A) return note();
+    const target = item.kind === 'term' ? item.f : () => (item.kind === 'frac' ? item.ans[0] / item.ans[1] : item.ans);
+    if (!same(e => ev(A, e), target)) return bad(vars.length ? 'Dieser Term ist nicht gleichwertig zur Aufgabe. Prüfe die letzte Umformung, besonders Vorzeichen und Klammern.' : 'Diese Zeile ergibt nicht denselben Wert wie die Aufgabe. Prüfe die letzte Rechnung.');
+    const r = check(s);
+    if (r.ok) return finish(s);
+    add('');
+    say('ok', r.msg ? r.msg.replace('Der Wert stimmt, aber', 'Gleichwertig, aber').replace('Der Term ist gleichwertig, aber', 'Gleichwertig, aber') : 'Gleichwertig. Rechne weiter.');
+  }
+  // Gleichungen: Jede Zeile muss gleichwertig zur Ausgangsgleichung sein; fertig bei «x = gekürzter Bruch»
+  function stepEquation(raw) {
+    const msg = $('stepMsg');
     const E = parseEq(raw);
     if (E.invalid) { msg.className = 'stepmsg bad'; msg.textContent = E.invalid; return; }
     if (!propTo(E.f, item.eqf)) {
