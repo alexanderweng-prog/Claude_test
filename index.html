@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lern-Apps Halingen</title>
+<meta name="description" content="Alle Lern-Apps der Sekundarschule Halingen auf einer Seite.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: oklch(0.985 0.002 240); --surface: oklch(0.99 0.001 240);
+  --ink: oklch(0.24 0.006 240); --muted: oklch(0.42 0.006 240);
+  --line: oklch(0.90 0.004 240); --line-strong: oklch(0.24 0.006 240);
+  --shadow: 0 1px 2px oklch(0.2 0 0 / 0.04), 0 4px 12px oklch(0.2 0 0 / 0.06);
+  --c-mathe: oklch(0.45 0.09 255); --c-mathe-bg: oklch(0.95 0.02 255);
+  --c-nut: oklch(0.42 0.08 155);   --c-nut-bg: oklch(0.95 0.02 155);
+  --c-sport: oklch(0.50 0.11 45);  --c-sport-bg: oklch(0.95 0.025 45);
+  --f-display: "Fraunces", Georgia, serif;
+  --f-body: "Source Sans 3", Helvetica, Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: oklch(0.18 0.006 240); --surface: oklch(0.23 0.006 240);
+    --ink: oklch(0.95 0.003 240); --muted: oklch(0.75 0.005 240);
+    --line: oklch(0.32 0.006 240); --line-strong: oklch(0.85 0.005 240);
+    --shadow: none;
+    --c-mathe: oklch(0.78 0.09 255); --c-mathe-bg: oklch(0.30 0.04 255);
+    --c-nut: oklch(0.78 0.09 155);   --c-nut-bg: oklch(0.29 0.04 155);
+    --c-sport: oklch(0.80 0.10 45);  --c-sport-bg: oklch(0.30 0.04 45);
+    color-scheme: dark;
+  }
+  :root:not([data-theme="light"]) .logo { filter: invert(1) hue-rotate(180deg); mix-blend-mode: normal; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.5; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 24px 16px 48px; }
+header { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap;
+  border-bottom: 2px solid var(--line-strong); padding-bottom: 14px; margin-bottom: 28px; }
+.kicker { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 600; margin: 0; line-height: 1.15; text-wrap: balance; }
+h1 { font-size: clamp(26px, 5vw, 34px); }
+.logo { height: 44px; width: auto; max-width: 100%; mix-blend-mode: multiply; }
+section { margin-bottom: 32px; }
+section > h2 { font-size: 21px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+section > h2::before { content: ""; width: 12px; height: 12px; border-radius: 3px; background: var(--fach); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+a.card { display: flex; flex-direction: column; gap: 6px; padding: 16px 18px; text-decoration: none; color: inherit;
+  background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--fach);
+  border-radius: 8px; box-shadow: var(--shadow); transition: transform .12s, border-color .12s; }
+a.card:hover { transform: translateY(-2px); border-color: var(--fach); }
+a.card:focus-visible { outline: 3px solid var(--fach); outline-offset: 2px; }
+.card h3 { font-size: 18px; }
+.card p { margin: 0; color: var(--muted); font-size: 15px; }
+.tag { align-self: flex-start; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 99px;
+  background: var(--fach-bg); color: var(--fach); }
+.mathe { --fach: var(--c-mathe); --fach-bg: var(--c-mathe-bg); }
+.nut   { --fach: var(--c-nut);   --fach-bg: var(--c-nut-bg); }
+.sport { --fach: var(--c-sport); --fach-bg: var(--c-sport-bg); }
+footer { border-top: 1px solid var(--line); padding-top: 14px; color: var(--muted); font-size: 14px; }
+@media (prefers-reduced-motion: reduce) { a.card { transition: none; } a.card:hover { transform: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="kicker">Sekundarschule Halingen</div>
+      <h1>Lern-Apps</h1>
+    </div>
+    <img class="logo" src="logo.png" alt="Sekundarschule Halingen">
+  </header>
+
+  <section class="mathe">
+    <h2>Mathematik, Deutsch und Informatik</h2>
+    <div class="grid">
+      <a class="card" href="kanti-site/">
+        <span class="tag">Aufnahmeprüfung</span>
+        <h3>Kanti-Trainer Mathematik</h3>
+        <p>Adaptives Training, Probeprüfung mit Note, Fehlerheft und Lernplan.</p>
+      </a>
+      <a class="card" href="kanti-deutsch/">
+        <span class="tag">Aufnahmeprüfung</span>
+        <h3>Kanti-Trainer Deutsch</h3>
+        <p>Grammatik, Wortschatz und Leseverstehen in Stufen.</p>
+      </a>
+      <a class="card" href="flow-trainer/">
+        <span class="tag">Mathematik · Informatik</span>
+        <h3>Flow-Trainer</h3>
+        <p>Kopfrechnen, Einheiten, Binär- und Hexadezimalzahlen. Passt sich dem Können an.</p>
+      </a>
+    </div>
+  </section>
+
+  <section class="nut">
+    <h2>Natur und Technik</h2>
+    <div class="grid">
+      <a class="card" href="nut-lernlandkarte/">
+        <span class="tag">7.–9. Klasse</span>
+        <h3>NuT Lernlandkarte</h3>
+        <p>Alle Kapitel des Lehrmittels als Lern-Apps mit Vertonung.</p>
+      </a>
+      <a class="card" href="fantasy-lernapp/site/">
+        <span class="tag">Fantasy-Lernwelt</span>
+        <h3>Naturalia</h3>
+        <p>Die NuT-Kapitel als Reiche einer Fantasy-Welt mit Quests und Rängen.</p>
+      </a>
+      <a class="card" href="leistung/">
+        <span class="tag">Energie und Leistung</span>
+        <h3>Leistung</h3>
+        <p>Drei Kapitel von der Arbeit zur Leistung bis zum Wirkungsgrad, mit Sprachclips.</p>
+      </a>
+      <a class="card" href="sexualkunde/">
+        <span class="tag">Körper</span>
+        <h3>Pubertät &amp; Zyklus</h3>
+        <p>Veränderungen in der Pubertät, Hormone und Zyklus.</p>
+      </a>
+    </div>
+  </section>
+
+  <section class="sport">
+    <h2>Sport</h2>
+    <div class="grid">
+      <a class="card" href="sporttheorie/">
+        <span class="tag">7. Klasse</span>
+        <h3>Sporttheorie</h3>
+        <p>Theorie-Einheiten für alle, die im Sportunterricht nicht mitmachen können.</p>
+      </a>
+      <a class="card" href="ruhepol/">
+        <span class="tag">Mentaltraining</span>
+        <h3>Ruhepol</h3>
+        <p>Atem- und Entspannungsübungen.</p>
+      </a>
+    </div>
+  </section>
+
+  <footer>Der Lernfortschritt wird pro Gerät und Browser gespeichert.</footer>
+</div>
+</body>
+</html>
