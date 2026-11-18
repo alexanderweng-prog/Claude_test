@@ -9,7 +9,7 @@
 | `flow-trainer/` | Flow-Trainer | dieses Repo |
 | `nut-lernlandkarte/` | NuT Lernlandkarte | Repo NuT-Gaming |
 | `fantasy-lernapp/site/` | Naturalia (7 Kapitel, ohne Ton) | dieses Repo |
-| `naturalia-welt/site/` | Naturalia – alle Reiche (Lernlandkarte + Naturalia) | dieses Repo, siehe `naturalia-welt/ANLEITUNG.md` |
+| – | Naturalia – alle Reiche | eigenes Repo [Naturalia](https://github.com/alexanderweng-prog/Naturalia), verlinkt auf https://alexanderweng-prog.github.io/Naturalia/ |
 | `leistung/` | Leistung | Repo Leistungsaudio |
 | `sexualkunde/` | Pubertät & Zyklus | Repo Sexualkunde |
 | `sporttheorie/` | Sporttheorie | Repo sporttheorie |
