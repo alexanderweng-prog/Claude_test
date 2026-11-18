@@ -8,7 +8,6 @@
 | `kanti-deutsch/` | Kanti-Trainer Deutsch | Repo Kanti-Trainer_Deutsch |
 | `flow-trainer/` | Flow-Trainer | dieses Repo |
 | `nut-lernlandkarte/` | NuT Lernlandkarte | Repo NuT-Gaming |
-| `fantasy-lernapp/site/` | Naturalia (7 Kapitel, ohne Ton) | dieses Repo |
 | – | Naturalia – alle Reiche | eigenes Repo [Naturalia](https://github.com/alexanderweng-prog/Naturalia), verlinkt auf https://alexanderweng-prog.github.io/Naturalia/ |
 | `leistung/` | Leistung | Repo Leistungsaudio |
 | `sexualkunde/` | Pubertät & Zyklus | Repo Sexualkunde |
