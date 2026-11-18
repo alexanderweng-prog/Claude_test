@@ -7,6 +7,8 @@
 | `kanti-site/` | Kanti-Trainer Mathematik | dieses Repo |
 | `kanti-deutsch/` | Kanti-Trainer Deutsch | Repo Kanti-Trainer_Deutsch |
 | `flow-trainer/` | Flow-Trainer | dieses Repo |
+| `grammatik-trainer/` | Wortland – Grammatik-Abenteuer DaZ | Repo Grammatik-Trainer |
+| `mui-internet-ki/` | Internet, Bewertungen und KI (MuI, Globi) | Repo Klasse-Wartmann |
 | `nut-lernlandkarte/` | NuT Lernlandkarte | Repo NuT-Gaming |
 | – | Naturalia – alle Reiche | eigenes Repo [Naturalia](https://github.com/alexanderweng-prog/Naturalia), verlinkt auf https://alexanderweng-prog.github.io/Naturalia/ |
 | `leistung/` | Leistung | Repo Leistungsaudio |
