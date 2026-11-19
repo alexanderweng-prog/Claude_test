@@ -57,21 +57,6 @@ const FOG_REALMS = [
   ['8_4', 'Chemische Reaktionen'], ['9_1', 'Optische Phänomene'], ['9_2', 'Atommodelle'], ['9_3', 'Elektronische Schaltungen'], ['9_4', 'Energie und Leistung'],
   ['9_5', 'Genetik und Gentechnik'], ['9_6', 'Evolution'], ['9_7', 'Land-Ökosysteme'], ['9_8', 'Stoffkreisläufe']
 ];
-// Eigenes Kapitel: die Lernwerkstatt (eigene App im Repository «Container», läuft auf Vercel).
-// Sie hat keine festen Quests, sondern macht aus eigenem Material neue Lernpakete. Darum kein Reich auf der Karte.
-const WERKSTATT = {
-  url: 'https://lernwerkstatt-pi.vercel.app',
-  name: 'Werkstatt der Schriftgelehrten', icon: '\u{1FAB6}', color: '#2f6b4f',
-  lore: 'Hier schreiben die Gelehrten neue Schriftrollen: Aus eigenem Material entstehen Lernpfad, Rätsel und Prüfungen.',
-  teile: [
-    ['\u{1F4D6}', 'Lernpfad', 'Erklärungen Schritt für Schritt, mit Verständnisfrage'],
-    ['\u{1F3AF}', 'Flow-Training', 'Fragen passen sich laufend deinem Können an'],
-    ['\u{1F9E9}', 'Spiele', 'Kreuzworträtsel, Memory, Lückentext, Zuordnen, Reihenfolge, Quiz'],
-    ['\u{1F501}', 'Lernkartei', 'Was du falsch hattest, kommt gezielt wieder'],
-    ['\u{1F4AC}', 'Denkfragen und Texte', 'Rückmeldung durch die KI'],
-    ['\u{1F4CA}', 'Drei Niveaus', 'Dasselbe Thema, passend schwer']
-  ]
-};
 // Heldenrang über alle Reiche (Summe der XP)
 const HERO_RANKS = [
   { xp: 0, name: 'Wanderseele' }, { xp: 250, name: 'Abenteuerherz' }, { xp: 750, name: 'Klingenträger' },

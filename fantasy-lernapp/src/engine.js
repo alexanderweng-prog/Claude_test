@@ -882,19 +882,6 @@ function realmListHtml(per) {
     }).join('')}</div>`;
   }).join('');
 }
-function werkstattHtml() {
-  const w = WERKSTATT;
-  const teile = w.teile.map(t => `<li><span class="ws-ticon" aria-hidden="true">${t[0]}</span><span><b>${esc(t[1])}</b><small>${esc(t[2])}</small></span></li>`).join('');
-  return `<div class="row"><h2>Die Lernwerkstatt</h2><span class="small">eigenes Kapitel</span></div>
-    <p class="small">Neben den Reichen gibt es eine Werkstatt: Dort entstehen aus Unterrichtsmaterial neue Lernpakete, auch zu Themen ausserhalb von Natur und Technik.</p>
-    <div class="card werkstatt" style="--sc:${w.color}">
-      <div class="ws-kopf"><span class="ws-icon" aria-hidden="true">${w.icon}</span><span><span class="tag">Lernwerkstatt · mit KI</span><span class="btitle">${esc(w.name)}</span></span></div>
-      <p class="small"><i>${esc(w.lore)}</i></p>
-      <ul class="ws-liste">${teile}</ul>
-      <p class="small">Für die KI-Funktionen brauchst du den Klassencode deiner Lehrperson. Lernpakete, die sie dir per Link schickt, funktionieren auch ohne Code. Dein Fortschritt dort wird getrennt von Naturalia gespeichert.</p>
-      <a class="btn btn-primary block" href="${w.url}" target="_blank" rel="noopener">Werkstatt öffnen ↗</a>
-    </div>`;
-}
 function viewWorld() {
   const { per, tot } = worldTotals();
   const hr = heroRank(tot.xp), cur = HERO_RANKS[hr], nxt = HERO_RANKS[hr + 1];
@@ -926,7 +913,6 @@ function viewWorld() {
     <div class="row"><h2>Die Reiche</h2></div>
     <p class="small">Jedes Reich gehört zu einem Kapitel im Lehrplan und hat sechs Quests. Tippe auf eine Quest, um direkt ihre Schriftrolle zu öffnen.</p>
     ${realmListHtml(per)}
-    ${werkstattHtml()}
     <div class="row"><h2>Sagen von Naturalia</h2><span class="small mono">${nSaga} von ${SAGAS.length}</span></div>
     <p class="small">Sagen erzählen von Taten über alle Reiche hinweg.</p>
     <div class="tgrid">${sagas}</div>
