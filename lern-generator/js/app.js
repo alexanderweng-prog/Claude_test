@@ -33,6 +33,8 @@
       h('button', { class: 'marke', onclick: () => (zustand.schuelerModus && zustand.paket ? LA.zurUebersicht() : startAnsicht()) }, h('span', { class: 'marke-zeichen', 'aria-hidden': 'true' }, 'L'), 'Lernwerkstatt'),
       h('nav', null,
         zustand.schuelerModus ? h('span', { class: 'tag' }, 'Schüleransicht') : h('button', { class: 'knopf sekundaer klein', onclick: startAnsicht }, 'Meine Pakete'),
+        zustand.schuelerModus && LA.serverStatus && LA.serverStatus.serverKi && LA.serverStatus.codeNoetig
+          ? h('button', { class: 'knopf sekundaer klein', onclick: klassencodeDialog }, LA.kiVerfuegbar() ? '🔓 KI aktiv' : '🔑 Klassencode') : null,
         zustand.schuelerModus ? null : h('button', { class: 'knopf sekundaer klein', onclick: einstellungenAnsicht, 'aria-label': 'Einstellungen' }, LA.kiVerfuegbar() ? '⚙︎ KI aktiv' : '⚙︎ Einstellungen')));
   }
 
@@ -91,7 +93,7 @@
 
   function kiFormular() {
     if (!LA.kiVerfuegbar()) {
-      return h('div', { class: 'kasten' }, h('p', null, 'Für diesen Modus braucht es einen Claude-API-Schlüssel von Anthropic.'),
+      return h('div', { class: 'kasten' }, h('p', null, LA.serverStatus && LA.serverStatus.serverKi ? 'Der Server verlangt einen Klassencode. Trag ihn in den Einstellungen ein.' : 'Für diesen Modus braucht es einen Claude-API-Schlüssel von Anthropic oder den Lernwerkstatt-Server.'),
         h('button', { class: 'knopf', onclick: einstellungenAnsicht }, 'Schlüssel hinterlegen'));
     }
     const dateien = [];
@@ -134,7 +136,7 @@
       h('label', null, 'Material (Text)', material),
       h('label', null, 'oder/und Dateien: PDF, Fotos von Arbeitsblättern, Textdateien', dateiInput), dateiListe,
       h('label', null, 'Wunsch an die KI', hinweis),
-      h('div', { class: 'reihe' }, knopf, h('span', { class: 'hinweis' }, 'Modell: ' + (LA.MODELLE.find((m) => m.id === LA.einstellungen().modell) || {}).name)),
+      h('div', { class: 'reihe' }, knopf, h('span', { class: 'hinweis' }, 'Modell: ' + ((LA.MODELLE.find((m) => m.id === LA.aktuellesModell()) || {}).name || '') + (LA.serverModus() ? ' · über Server' : ''))),
       status);
   }
 
@@ -167,7 +169,7 @@
       const kiFehlt = sp.braucht_ki && !LA.kiVerfuegbar();
       return h('button', { class: 'spiel' + (gross ? ' gross' : '') + (kiFehlt ? ' gedimmt' : ''), onclick: () => spielAnsicht(s) },
         h('span', { class: 'spiel-symbol', 'aria-hidden': 'true' }, sp.symbol),
-        h('span', { class: 'spiel-text' }, h('span', { class: 'spiel-name' }, sp.name), h('span', { class: 'hinweis' }, kiFehlt ? 'braucht KI-Schlüssel' : sp.info)),
+        h('span', { class: 'spiel-text' }, h('span', { class: 'spiel-name' }, sp.name), h('span', { class: 'hinweis' }, kiFehlt ? (LA.serverStatus && LA.serverStatus.serverKi ? 'braucht den Klassencode' : 'braucht KI-Schlüssel') : sp.info)),
         st ? h('span', { class: 'spiel-stand', title: `${st.versuche}× gespielt` }, `${st.best}/${st.max}`) : null);
     };
     const istGespeichert = pakete().some((x) => x.id === p.id);
@@ -203,7 +205,9 @@
       zuLang ? h('p', { class: 'rueckmeldung nein' }, `Der Link ist sehr lang (${Math.round(link.length / 1000)}k Zeichen). Manche Programme kürzen ihn. Sicherer: Export-Datei weitergeben.`) : null,
       feld,
       h('div', { class: 'reihe' }, h('button', { class: 'knopf', onclick: async () => { try { await navigator.clipboard.writeText(link); LA.meldung('Link kopiert.'); } catch { feld.select(); LA.meldung('Bitte manuell kopieren (Ctrl+C).'); } } }, 'Link kopieren')),
-      h('p', { class: 'hinweis' }, 'Denkfragen und Textkorrektur mit KI-Rückmeldung funktionieren auf Schülergeräten nur, wenn dort ein API-Schlüssel hinterlegt ist. Ohne Schlüssel gibt es Musterantworten zur Selbsteinschätzung.'),
+      h('p', { class: 'hinweis' }, LA.serverStatus && LA.serverStatus.serverKi
+        ? 'Die App läuft über den Lernwerkstatt-Server: Lernende bekommen KI-Rückmeldungen' + (LA.serverStatus.codeNoetig ? ', sobald sie den Klassencode eingeben.' : ' ohne eigenen Schlüssel.')
+        : 'Denkfragen und Textkorrektur mit KI-Rückmeldung funktionieren auf Schülergeräten nur mit dem Lernwerkstatt-Server oder einem dort hinterlegten Schlüssel. Sonst gibt es Musterantworten zur Selbsteinschätzung.'),
     ]);
   }
 
@@ -212,6 +216,16 @@
     d.addEventListener('close', () => d.remove());
     document.body.append(d); d.showModal();
     return d;
+  }
+
+  function klassencodeDialog() {
+    const feld = h('input', { type: 'text', value: LA.einstellungen().klassenCode, autocomplete: 'off', autocapitalize: 'off', 'aria-label': 'Klassencode' });
+    const d = dialog('Klassencode', [
+      h('p', null, 'Mit dem Klassencode deiner Lehrperson bekommst du Rückmeldungen der KI zu Denkfragen und Texten.'),
+      feld,
+      h('div', { class: 'reihe' }, h('button', { class: 'knopf', onclick: () => { LA.einstellungenSpeichern({ klassenCode: feld.value.trim() }); d.close(); LA.meldung('Gespeichert.'); paketAnsicht(zustand.paket); } }, 'Speichern')),
+    ]);
+    feld.focus();
   }
 
   /* ---------- Bearbeiten ---------- */
@@ -259,22 +273,33 @@
   function einstellungenAnsicht() {
     kopf();
     const e = LA.einstellungen();
+    const st = LA.serverStatus;
     const key = h('input', { type: 'password', value: e.apiKey, placeholder: 'sk-ant-…', autocomplete: 'off', id: 'apikey' });
-    const modell = h('select', { id: 'modell' }, LA.MODELLE.map((m) => h('option', { value: m.id, selected: m.id === e.modell }, `${m.name} (${m.preis})`)));
+    const nurServer = st && st.serverKi && !e.apiKey;
+    const liste = nurServer ? st.modelle.map((id) => LA.MODELLE.find((m) => m.id === id) || { id, name: id, preis: '' }) : LA.MODELLE;
+    const modell = h('select', { id: 'modell' }, liste.map((m) => h('option', { value: m.id, selected: m.id === LA.aktuellesModell() }, m.preis ? `${m.name} (${m.preis})` : m.name)));
+    const code = h('input', { type: 'text', value: e.klassenCode, autocomplete: 'off', id: 'klassencode', placeholder: 'vom Server vorgegeben' });
+    const serverTeil = st ? h('div', { class: 'kasten' + (st.serverKi ? ' merksatz' : '') },
+      h('div', { class: 'label' }, 'Lernwerkstatt-Server'),
+      st.serverKi ? h('p', null, 'Die KI läuft über diesen Server. Der API-Schlüssel liegt dort, nicht im Browser. Lernende brauchen ' + (st.codeNoetig ? 'nur den Klassencode.' : 'nichts weiter.')) : h('p', null, 'Der Server läuft, aber ohne API-Schlüssel (ANTHROPIC_API_KEY fehlt).'),
+      st.serverKi && st.codeNoetig ? h('label', null, 'Klassencode', code) : null,
+      st.serverKi ? h('p', { class: 'hinweis' }, 'Ein eigener Schlüssel unten hat Vorrang vor dem Server. Für den Server-Modus das Feld leer lassen.') : null) : null;
     main().replaceChildren(
       h('h1', null, 'Einstellungen'),
       h('div', { class: 'formular' },
-        h('label', null, 'Claude-API-Schlüssel', key),
+        serverTeil,
+        h('label', null, st && st.serverKi ? 'Eigener Claude-API-Schlüssel (optional)' : 'Claude-API-Schlüssel', key),
         h('p', { class: 'hinweis' }, 'Den Schlüssel bekommst du auf console.anthropic.com (Konto, Guthaben laden, «API Keys»). Er wird nur in diesem Browser gespeichert und direkt an Anthropic gesendet. Wer Zugriff auf diesen Browser hat, kann ihn auslesen – darum nur auf dem eigenen Gerät eintragen, nicht auf Schülergeräten.'),
         h('label', null, 'Modell', modell),
         h('p', { class: 'hinweis' }, 'Preise sind grobe Schätzungen für ein mittelgrosses Material. Bewertungen und Korrekturen kosten pro Aufruf deutlich weniger.'),
         h('div', { class: 'reihe' },
-          h('button', { class: 'knopf', onclick: () => { LA.einstellungenSpeichern({ apiKey: key.value.trim(), modell: modell.value }); LA.meldung('Gespeichert.'); startAnsicht(); } }, 'Speichern'),
-          e.apiKey ? h('button', { class: 'knopf sekundaer', onclick: () => { LA.einstellungenSpeichern({ apiKey: '', modell: modell.value }); LA.meldung('Schlüssel entfernt.'); einstellungenAnsicht(); } }, 'Schlüssel entfernen') : null)));
+          h('button', { class: 'knopf', onclick: () => { LA.einstellungenSpeichern({ apiKey: key.value.trim(), modell: modell.value, klassenCode: code.value.trim() }); LA.meldung('Gespeichert.'); startAnsicht(); } }, 'Speichern'),
+          e.apiKey ? h('button', { class: 'knopf sekundaer', onclick: () => { LA.einstellungenSpeichern({ apiKey: '' }); LA.meldung('Schlüssel entfernt.'); einstellungenAnsicht(); } }, 'Schlüssel entfernen') : null)));
   }
 
   /* ---------- Start ---------- */
   async function init() {
+    await LA.serverPruefen();
     const m = location.hash.match(/^#paket=(.+)$/);
     if (m) {
       try {

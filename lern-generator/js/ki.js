@@ -9,17 +9,46 @@
   ];
 
   LA.einstellungen = function () {
-    return Object.assign({ apiKey: '', modell: 'claude-opus-5-5' }, LA.speicher.lesen(EINST_KEY, {}));
+    return Object.assign({ apiKey: '', modell: '', klassenCode: '' }, LA.speicher.lesen(EINST_KEY, {}));
   };
-  LA.einstellungenSpeichern = (e) => LA.speicher.schreiben(EINST_KEY, e);
-  LA.kiVerfuegbar = () => !!LA.einstellungen().apiKey;
+  LA.einstellungenSpeichern = (e) => LA.speicher.schreiben(EINST_KEY, Object.assign(LA.einstellungen(), e));
+
+  // Läuft die App auf dem Lernwerkstatt-Server (Docker)? Dann verwahrt der Server den Schlüssel.
+  LA.serverStatus = null;
+  LA.serverPruefen = async function () {
+    if (!location.protocol.startsWith('http')) return null;
+    try {
+      const r = await fetch(new URL('api/status', location.href), { cache: 'no-store' });
+      if (r.ok) { const s = await r.json(); if (typeof s.serverKi === 'boolean') LA.serverStatus = s; }
+    } catch { /* kein Server, z. B. GitHub Pages */ }
+    return LA.serverStatus;
+  };
+  const serverModus = () => !LA.einstellungen().apiKey && !!(LA.serverStatus && LA.serverStatus.serverKi);
+  LA.serverModus = serverModus;
+  LA.aktuellesModell = () => modellWaehlen();
+  LA.kiVerfuegbar = () => !!LA.einstellungen().apiKey || (serverModus() && (!LA.serverStatus.codeNoetig || !!LA.einstellungen().klassenCode));
 
   function client() {
     const e = LA.einstellungen();
-    if (!e.apiKey) throw new Error('Kein API-Schlüssel hinterlegt (Einstellungen).');
     if (!window.Anthropic) throw new Error('Die Anthropic-Bibliothek wurde nicht geladen.');
-    // Der Schlüssel liegt nur in diesem Browser. Deshalb gehört er auf ein Lehrergerät, nicht auf Schülergeräte.
-    return new window.Anthropic({ apiKey: e.apiKey, dangerouslyAllowBrowser: true, maxRetries: 2 });
+    if (e.apiKey) {
+      // Eigener Schlüssel: liegt nur in diesem Browser. Deshalb nur auf dem Lehrergerät.
+      return new window.Anthropic({ apiKey: e.apiKey, dangerouslyAllowBrowser: true, maxRetries: 2 });
+    }
+    if (serverModus()) {
+      // Der Server ersetzt den Platzhalter durch den echten Schlüssel.
+      return new window.Anthropic({
+        apiKey: 'schluessel-liegt-auf-dem-server', baseURL: new URL('api/anthropic', location.href).href.replace(/\/$/, ''),
+        defaultHeaders: { 'x-klassen-code': e.klassenCode || '' }, dangerouslyAllowBrowser: true, maxRetries: 2,
+      });
+    }
+    throw new Error('Keine KI verfügbar: Schlüssel in den Einstellungen hinterlegen oder die App über den Lernwerkstatt-Server öffnen.');
+  }
+  function modellWaehlen() {
+    const m = LA.einstellungen().modell;
+    // Server: ohne eigene Wahl gilt das erste Modell aus MODELLE
+    if (serverModus()) return LA.serverStatus.modelle.includes(m) ? m : LA.serverStatus.modelle[0];
+    return m || 'claude-opus-5-5';
   }
 
   /* ---------- JSON-Schemas für strukturierte Ausgaben ---------- */
@@ -79,7 +108,7 @@ Aufbau:
   // Ein Aufruf mit strukturierter JSON-Ausgabe. Server-Fallback bei Ablehnungen ist eingeschaltet.
   async function jsonAnfrage({ system, content, schema, maxTokens = 16000, effort = 'medium', beiFortschritt }) {
     const c = client();
-    const modell = LA.einstellungen().modell;
+    const modell = modellWaehlen();
     const basis = {
       model: modell,
       max_tokens: maxTokens,
@@ -111,7 +140,9 @@ Aufbau:
 
   function verstaendlich(e) {
     const s = e && e.status;
-    if (s === 401) return new Error('API-Schlüssel ungültig (401). Bitte in den Einstellungen prüfen.');
+    // Meldungen des eigenen Servers (Klassencode, Limit, fehlender Schlüssel) direkt anzeigen
+    if (e && e.error && e.error.error && e.error.error.type === 'lernwerkstatt_error') return new Error(e.error.error.message);
+    if (s === 401) return new Error(serverModus() ? 'Klassencode falsch oder fehlt.' : 'API-Schlüssel ungültig (401). Bitte in den Einstellungen prüfen.');
     if (s === 403) return new Error('Kein Zugriff auf dieses Modell (403).');
     if (s === 429) return new Error('Zu viele Anfragen oder Guthaben aufgebraucht (429). Kurz warten oder Guthaben prüfen.');
     if (s === 529 || s >= 500) return new Error('Der KI-Dienst ist gerade überlastet. Bitte später nochmals versuchen.');

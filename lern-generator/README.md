@@ -42,15 +42,35 @@ Eine Bewertung oder Textkorrektur kostet einen Bruchteil davon. Die echten Koste
 
 ## Wichtige Einschränkungen
 
-- **API-Schlüssel**: Er liegt im Browser (localStorage) und ist dort auslesbar. Nur auf dem eigenen Gerät eintragen. Auf Schülergeräten ohne Schlüssel funktionieren alle Spiele; Denkfragen zeigen dann eine Musterantwort zur Selbsteinschätzung, die Textkorrektur ist deaktiviert.
+- **API-Schlüssel ohne Server**: Wenn du die App als Datei öffnest, liegt der Schlüssel im Browser (localStorage) und lässt sich dort auslesen. Trag ihn deshalb nur auf dem eigenen Gerät ein. Für die Klasse ist der Docker-Container gedacht (siehe oben). Ohne KI funktionieren alle Spiele; Denkfragen zeigen dann eine Musterantwort zur Selbsteinschätzung, die Textkorrektur ist deaktiviert.
+- **Klassencode** ist ein einfacher Schutz gegen Fremdnutzung, keine echte Anmeldung. Wer ihn kennt, kann die KI nutzen, bis das Stundenlimit erreicht ist. Bei Missbrauch: Code ändern und den Container neu starten.
 - **Datenschutz**: Mit KI werden Material und Schülertexte an Anthropic (USA) gesendet. Keine Namen oder anderen Personendaten eingeben und die Vorgaben deiner Schule bzw. des Kantons prüfen.
 - **Speicher**: Pakete und Fortschritt liegen nur im jeweiligen Browser. Browserdaten löschen = weg. Wichtige Pakete exportieren.
 - **Word-Dateien** (.docx) werden nicht gelesen → als PDF speichern.
 - Die KI kann Fehler machen. Pakete vor dem Einsatz durchsehen.
 
-## Nächster sinnvoller Ausbau
+## Betrieb im Docker-Container (empfohlen für die Klasse)
 
-Ein kleiner Server (z. B. Cloudflare Worker oder Vercel-Funktion), der den Schlüssel verwahrt. Dann könnten Lernende die KI-Funktionen nutzen, ohne dass der Schlüssel auf ihren Geräten liegt.
+Der Container liefert die App aus und verwahrt den API-Schlüssel. Lernende brauchen keinen eigenen Schlüssel, nur die Adresse und den Klassencode.
+
+```bash
+cd lern-generator
+cp env.beispiel .env        # Schlüssel und Klassencode eintragen
+docker compose up -d        # danach: http://localhost:8080
+```
+
+Läuft auf allem, was Docker kann: eigener PC, NAS (Synology, QNAP), Raspberry Pi oder ein Mietserver. Damit die Lernenden darauf zugreifen können, muss der Container für ihre Geräte erreichbar sein, z. B. im Schulnetz oder über das Internet mit HTTPS (z. B. über einen Reverse Proxy wie Caddy).
+
+| Variable | Bedeutung |
+|---|---|
+| `ANTHROPIC_API_KEY` | Dein Schlüssel. Steht nur in `.env` auf dem Server (die Datei ist von Git ausgeschlossen). |
+| `KLASSEN_CODE` | Code, den die Lernenden einmal eingeben (oben rechts, «🔑 Klassencode»). Leer = jede Person mit der Adresse kann die KI auf deine Kosten nutzen. |
+| `LIMIT_PRO_STUNDE` | KI-Anfragen pro Gerät (IP-Adresse) und Stunde, Standard 60. Achtung: Im Schulnetz teilen sich oft alle Geräte eine IP. Dann für die ganze Klasse grosszügig setzen, z. B. 600. |
+| `MODELLE` | Freigegebene Modelle. Das erste ist der Standard, also nimmt man am besten das günstigste zuerst. Die Lehrperson kann in den Einstellungen ein anderes freigegebenes Modell wählen. |
+
+Was der Server erzwingt: nur `/v1/messages`, nur freigegebene Modelle, höchstens 32 000 Ausgabe-Tokens pro Anfrage, Klassencode und Stundenlimit. Der Server-Code selbst wird nicht ausgeliefert.
+
+Ohne Docker geht es auch mit Node.js ab Version 20: `ANTHROPIC_API_KEY=… KLASSEN_CODE=… node server/server.js`.
 
 ## Technik
 
@@ -60,3 +80,5 @@ Reines HTML/CSS/JavaScript ohne Build-Schritt. `js/anthropic-sdk-1.5.0.min.js` i
 - `js/spiele.js` – alle Spieltypen
 - `js/offline.js` – Generator ohne KI und Demo-Paket
 - `js/app.js` – Ansichten, Speicher, Teilen
+- `server/server.js` – Auslieferung und KI-Weiterleitung mit Schlüssel (ohne Abhängigkeiten)
+- `Dockerfile`, `docker-compose.yml`, `env.beispiel`
