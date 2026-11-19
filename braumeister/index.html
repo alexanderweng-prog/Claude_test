@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Braumeister · Vom Malz zum Bier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg: oklch(0.985 0.002 240);
+  --card: oklch(0.995 0.001 240);
+  --ink: oklch(0.24 0.006 240);
+  --muted: oklch(0.45 0.006 240);
+  --line: oklch(0.89 0.004 240);
+  --line-strong: oklch(0.78 0.005 240);
+  --ac9: oklch(0.28 0.06 155);
+  --ac7: oklch(0.38 0.075 155);
+  --ac5: oklch(0.52 0.09 155);
+  --ac2: oklch(0.88 0.05 155);
+  --ac1: oklch(0.95 0.025 155);
+  --warn: oklch(0.50 0.12 65);
+  --warn-bg: oklch(0.96 0.04 85);
+  --bad: oklch(0.46 0.16 27);
+  --bad-bg: oklch(0.965 0.025 27);
+  --radius: 10px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Source Sans 3',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;font-size:18px;line-height:1.5}
+h1,h2,h3{font-family:'Fraunces',Georgia,'Times New Roman',serif;font-weight:600;line-height:1.2;margin:0 0 .5em;color:var(--ac9)}
+h1{font-size:2.1rem}
+h2{font-size:1.5rem}
+h3{font-size:1.15rem}
+p{margin:0 0 .9em}
+.wrap{max-width:780px;margin:0 auto;padding:0 16px}
+header.top{border-bottom:1px solid var(--line);background:var(--card)}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:12px;padding-bottom:12px}
+.brand{font-family:'Fraunces',Georgia,serif;font-weight:600;color:var(--ac9);font-size:1.15rem}
+.xp{font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;font-size:.9rem;background:var(--ac1);border:1px solid var(--ac2);color:var(--ac9);padding:4px 12px;border-radius:999px;white-space:nowrap}
+ol.steps{list-style:none;display:flex;gap:6px;padding:0;margin:18px 0 6px}
+ol.steps li{flex:1;text-align:center;font-size:.8rem;color:var(--muted);border-top:4px solid var(--line);padding-top:6px}
+ol.steps li.done{border-top-color:var(--ac5);color:var(--ac7)}
+ol.steps li.cur{border-top-color:var(--ac9);color:var(--ac9);font-weight:700}
+main{padding:12px 0 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin:14px 0}
+.lead{font-size:1.1rem;color:var(--ink)}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+.btn{appearance:none;border:0;border-radius:8px;background:var(--ac7);color:#fff;font:inherit;font-weight:600;padding:12px 22px;min-height:48px;cursor:pointer}
+.btn:hover:not(:disabled){background:var(--ac9)}
+.btn:disabled{background:var(--line-strong);cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ac7);border:1.5px solid var(--ac5)}
+.btn.ghost:hover:not(:disabled){background:var(--ac1)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+:focus-visible{outline:3px solid var(--ac5);outline-offset:2px}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:8px 0 20px}
+button.choice{appearance:none;text-align:left;font:inherit;color:var(--ink);background:var(--card);border:1.5px solid var(--line-strong);border-radius:var(--radius);padding:12px 14px;cursor:pointer;min-height:64px}
+button.choice:hover{border-color:var(--ac5)}
+button.choice[aria-pressed="true"]{border-color:var(--ac7);background:var(--ac1);box-shadow:inset 0 0 0 1px var(--ac7)}
+button.choice b{display:block;color:var(--ac9)}
+button.choice span{font-size:.9rem;color:var(--muted)}
+.ctl{margin:18px 0 26px}
+.ctl .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
+.ctl label{font-weight:600}
+.ctl output{font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;color:var(--ac9);background:var(--ac1);border:1px solid var(--ac2);padding:2px 10px;border-radius:6px}
+.track{position:relative;height:12px;border-radius:6px;background:var(--line);margin:0 12px}
+.track .band{position:absolute;top:0;bottom:0;background:var(--ac2);border-radius:6px;border:1px solid var(--ac5)}
+.track input{position:absolute;left:-12px;top:-10px;width:calc(100% + 24px);height:32px;margin:0;background:transparent;-webkit-appearance:none;appearance:none}
+.track input::-webkit-slider-runnable-track{background:transparent;height:32px}
+.track input::-moz-range-track{background:transparent;height:32px}
+.track input::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;margin-top:2px;border-radius:50%;background:var(--ac7);border:3px solid #fff;box-shadow:0 0 0 1.5px var(--ac7)}
+.track input::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--ac7);border:3px solid #fff;box-shadow:0 0 0 1.5px var(--ac7)}
+.scale{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);margin:6px 0 0}
+.tip{background:var(--ac1);border:1px solid var(--ac2);border-left:4px solid var(--ac5);border-radius:8px;padding:10px 14px;margin:12px 0;font-size:.95rem}
+.box-warn{background:var(--warn-bg);border:1px solid oklch(0.85 0.08 85);border-left:4px solid var(--warn);border-radius:8px;padding:10px 14px;margin:12px 0}
+.box-bad{background:var(--bad-bg);border:1px solid oklch(0.85 0.06 27);border-left:4px solid var(--bad);border-radius:8px;padding:14px 16px;margin:12px 0}
+.box-bad h2{color:var(--bad)}
+.score{display:flex;align-items:center;gap:14px;margin:6px 0 14px}
+.bar{flex:1;height:14px;border-radius:7px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ac5);border-radius:7px}
+.score b{font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;color:var(--ac9);white-space:nowrap}
+ul.fb{list-style:none;padding:0;margin:0}
+ul.fb li{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+ul.fb li:first-child{border-top:0}
+ul.fb .mark{flex:0 0 auto;font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;font-size:.8rem;font-weight:500;padding:2px 8px;border-radius:6px;height:fit-content;margin-top:3px}
+ul.fb .ok .mark{background:var(--ac1);color:var(--ac7);border:1px solid var(--ac2)}
+ul.fb .no .mark{background:var(--warn-bg);color:var(--warn);border:1px solid oklch(0.85 0.08 85)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.9rem;margin-bottom:6px}
+.legend span::before{content:"";display:inline-block;width:26px;height:0;border-top:3px solid;margin-right:6px;vertical-align:middle}
+.legend .l1::before{border-color:#2f6b4a}
+.legend .l2::before{border-color:#b86b00;border-top-style:dashed}
+canvas{width:100%;height:260px;display:block;background:#fff;border:1px solid var(--line);border-radius:8px}
+.readouts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.readouts div{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;text-align:center}
+.readouts b{display:block;font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;font-size:1.15rem;color:var(--ac9)}
+.readouts span{font-size:.8rem;color:var(--muted)}
+.qopts{display:grid;gap:10px;margin:14px 0}
+button.qopt{appearance:none;text-align:left;font:inherit;color:var(--ink);background:var(--card);border:1.5px solid var(--line-strong);border-radius:var(--radius);padding:12px 14px;cursor:pointer;min-height:52px}
+button.qopt:hover:not(:disabled){border-color:var(--ac5);background:var(--ac1)}
+button.qopt:disabled{cursor:default}
+button.qopt.right{border-color:var(--ac7);background:var(--ac1);box-shadow:inset 0 0 0 1px var(--ac7)}
+button.qopt.wrong{border-color:var(--warn);background:var(--warn-bg)}
+button.qopt .tag{display:inline-block;font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;font-size:.75rem;margin-right:8px;padding:1px 7px;border-radius:5px;background:#fff;border:1px solid var(--line-strong)}
+.trophy{display:block;margin:0 auto 6px;width:110px;height:110px}
+.final-head{text-align:center}
+.final-head .big{font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;font-size:2.4rem;color:var(--ac9);font-weight:500}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th,td{text-align:left;padding:8px 6px;border-top:1px solid var(--line)}
+th{font-weight:600;color:var(--muted);font-size:.85rem;border-top:0}
+td.n,th.n{text-align:right;font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.facts div{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.facts span{display:block;font-size:.8rem;color:var(--muted)}
+.facts b{color:var(--ac9)}
+footer{border-top:1px solid var(--line);background:var(--card);padding:18px 0}
+footer .wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:space-between}
+footer img{height:44px;width:auto;display:block}
+footer p{margin:0;font-size:.9rem;color:var(--muted)}
+.hint-line{margin:0;font-size:.85rem;color:var(--muted)}
+
+/* ---- v2: Stile, Ziele, Anzeigen, Bilder ---- */
+.stylegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:14px 0}
+button.stylecard{appearance:none;text-align:left;font:inherit;color:var(--ink);background:var(--card);border:1.5px solid var(--line-strong);border-radius:var(--radius);padding:14px;cursor:pointer}
+button.stylecard:hover{border-color:var(--ac5)}
+button.stylecard[aria-pressed="true"]{border-color:var(--ac7);background:var(--ac1);box-shadow:inset 0 0 0 1px var(--ac7)}
+button.stylecard .glassmini{display:block;width:44px;height:62px;margin-bottom:8px}
+button.stylecard b{display:block;font-family:'Fraunces',Georgia,serif;font-size:1.15rem;color:var(--ac9)}
+button.stylecard p{font-size:.92rem;color:var(--muted);margin:.3em 0 .6em}
+.badge{display:inline-block;font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;font-size:.72rem;padding:1px 8px;border-radius:999px;border:1px solid var(--ac5);color:var(--ac7);background:#fff;margin-right:6px}
+.badge.craft{background:var(--ac9);color:#fff;border-color:var(--ac9)}
+.target{background:var(--bg);border:1px dashed var(--line-strong);border-radius:8px;padding:8px 12px;margin:10px 0;font-size:.9rem}
+.target b{color:var(--ac9)}
+.target .tv{display:inline-block;margin:2px 12px 2px 0;white-space:nowrap}
+.gauges{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:14px 0 4px}
+.gauge{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.gauge .gh{display:flex;justify-content:space-between;align-items:baseline;font-size:.9rem}
+.gauge .gh b{font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;color:var(--ac9)}
+.gbar{position:relative;height:12px;border-radius:6px;background:var(--line);margin:8px 0 4px}
+.gbar .win{position:absolute;top:0;bottom:0;background:var(--ac2);border:1px solid var(--ac5);border-radius:6px}
+.gbar .mk{position:absolute;top:-4px;width:6px;height:20px;border-radius:3px;background:var(--warn);transform:translateX(-3px);transition:left .25s}
+.gbar .mk.in{background:var(--ac7)}
+.gauge .gf{font-size:.78rem;color:var(--muted)}
+svg.scene{display:block;width:100%;height:auto;background:linear-gradient(#fbfcfb,#f1f5f2);border:1px solid var(--line);border-radius:10px;margin:10px 0}
+svg .svt{font:600 13px 'JetBrains Mono',ui-monospace,monospace;fill:#2a4a38}
+svg .svs{font:12px 'Source Sans 3',system-ui,sans-serif;fill:#5a6560}
+svg .svl{font:600 13px 'Source Sans 3',system-ui,sans-serif;fill:#2a4a38}
+.finalglass{display:block;margin:0 auto 8px;width:150px}
+.cmp td.ok{color:var(--ac7);font-weight:600}
+.cmp td.no{color:var(--warn);font-weight:600}
+
+@keyframes rise{0%{transform:translateY(0);opacity:0}12%{opacity:.9}100%{transform:translateY(-70px);opacity:0}}
+@keyframes steam{0%{transform:translateY(0) scaleX(1);opacity:0}25%{opacity:.7}100%{transform:translateY(-34px) scaleX(1.25);opacity:0}}
+@keyframes stir{0%,100%{transform:translateX(-36px)}50%{transform:translateX(36px)}}
+@keyframes dropin{0%{transform:translateY(-30px);opacity:0}15%{opacity:1}70%{transform:translateY(62px);opacity:1}85%,100%{transform:translateY(70px);opacity:0}}
+@keyframes flame{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.25)}}
+@keyframes pop{0%{transform:scale(.3);opacity:0}30%{opacity:.9}100%{transform:scale(1.2);opacity:0}}
+@keyframes drift{0%,100%{transform:translate(0,0)}50%{transform:translate(8px,-6px)}}
+@keyframes bud{0%,100%{transform:scale(.55)}50%{transform:scale(1)}}
+@keyframes fillup{0%{transform:scaleY(0)}100%{transform:scaleY(1)}}
+@keyframes foamup{0%,60%{transform:translateY(14px);opacity:0}100%{transform:translateY(0);opacity:1}}
+@keyframes glint{0%,100%{opacity:.35}50%{opacity:1}}
+.stir{animation:stir 3.2s ease-in-out infinite}
+.steam{animation:steam 3.4s ease-out infinite;transform-box:fill-box;transform-origin:center}
+.flame{animation:flame .7s ease-in-out infinite;transform-box:fill-box;transform-origin:bottom}
+.bubp{animation:pop 1.3s ease-out infinite;transform-box:fill-box;transform-origin:center}
+.dropin{animation:dropin 4.2s ease-in infinite}
+.cellfloat{animation:drift 5s ease-in-out infinite}
+.budding{animation:bud 3.6s ease-in-out infinite;transform-box:fill-box;transform-origin:left center}
+.bub{animation:rise var(--bd,2s) linear infinite}
+.idle .bub,.idle .blip{opacity:0;animation:none}
+.snow{animation:glint 2.4s ease-in-out infinite}
+.fillbeer{transform-box:fill-box;transform-origin:bottom;animation:fillup 2.6s ease-out both}
+.foam{animation:foamup 3.2s ease-out both}
+@media (prefers-reduced-motion: reduce){
+  .stir,.steam,.flame,.bubp,.dropin,.cellfloat,.budding,.bub,.snow,.fillbeer,.foam,.blip{animation:none!important}
+}
+@media (max-width:520px){
+  body{font-size:17px}
+  h1{font-size:1.7rem}
+  .card{padding:16px}
+  .readouts{grid-template-columns:1fr}
+  .cmp th,.cmp td{font-size:.8rem;padding:6px 3px}
+  .cmp td.n{white-space:nowrap}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand">Braumeister</div>
+  <div class="xp" id="xp" aria-live="polite">0 Punkte</div>
+</div></header>
+<div class="wrap">
+  <ol class="steps" id="steps" aria-label="Fortschritt"></ol>
+  <main id="app"></main>
+</div>
+<footer><div class="wrap">
+  <img src="data:image/png;base64,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" alt="Logo Sekundarschule Halingen">
+  <p>Lern-App von Alexander Weng · Sekundarschule Halingen</p>
+</div></footer>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- Hilfsfunktionen ---------- */
+var app = document.getElementById('app');
+var stepsEl = document.getElementById('steps');
+var xpEl = document.getElementById('xp');
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function clamp(x,a,b){ return Math.max(a,Math.min(b,x)); }
+function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function fit(v,lo,hi,tol){ if(v>=lo&&v<=hi) return 1; var d=v<lo?lo-v:v-hi; return Math.max(0,1-d/tol); }
+function r1(x){ return Math.round(x*10)/10; }
+var NAMES = ['Rohstoffe','Maischen','Würze','Gärung','Reifung'];
+var MAXPTS = 15, BONUS = 5, RETRY_COST = 2;
+
+/* ---------- Daten ---------- */
+var STYLES = {
+  helles:{name:'Helles Lager',craft:false,level:'Einsteiger',
+    desc:'Hell, klar, mild und süffig. Der Klassiker aus dem Süden.',
+    S0:[11,13],ibu:[18,28],ebc:[4,10],aroma:[10,30],lager:[3,6],abv:'ca. 5 Vol.-%',
+    fitMalz:{pils:5,pale:3,weizen:1,roh:0},fitHefe:{lager:5,ale:2,weizen:1,baecker:1},
+    malzHint:'Ein Helles wird aus hellem Pilsner-Malz gebraut.',
+    hefeHint:'Ein Helles wird mit untergäriger Lagerhefe vergoren.'},
+  weizen:{name:'Weizenbier',craft:false,level:'Einsteiger',
+    desc:'Trüb, fruchtig und würzig mit wenig Bitterkeit und viel Schaum.',
+    S0:[11,13],ibu:[10,18],ebc:[6,14],aroma:[0,15],lager:[1,2],abv:'ca. 5 Vol.-%',
+    fitMalz:{weizen:5,pils:3,pale:3,roh:0},fitHefe:{weizen:5,ale:3,lager:1,baecker:1},
+    malzHint:'Ein Weizenbier besteht zu einem grossen Teil aus Weizenmalz.',
+    hefeHint:'Ein Weizenbier wird mit spezieller Weizenhefe vergoren.'},
+  ipa:{name:'India Pale Ale (IPA)',craft:true,level:'Fortgeschritten',
+    desc:'Goldgelb bis kupfern, kräftig gehopft, fruchtig-bitter. Ein typisches Craft-Bier.',
+    S0:[14,17],ibu:[45,70],ebc:[8,25],aroma:[90,170],lager:[1,2],abv:'ca. 6 bis 7 Vol.-%',
+    fitMalz:{pale:5,pils:4,weizen:1,roh:0},fitHefe:{ale:5,weizen:2,lager:3,baecker:1},
+    malzHint:'Ein IPA basiert meist auf hellem Pale-Ale-Malz.',
+    hefeHint:'Ein IPA wird mit obergäriger Ale-Hefe vergoren.'},
+  stout:{name:'Stout',craft:true,level:'Fortgeschritten',
+    desc:'Tiefschwarz mit cremigem Schaum und Röstaromen wie Kaffee und Schokolade.',
+    S0:[13,16],ibu:[25,45],ebc:[60,90],aroma:[15,45],lager:[2,4],abv:'ca. 5 bis 6 Vol.-%',
+    fitMalz:{pale:5,pils:4,weizen:1,roh:0},fitHefe:{ale:5,weizen:2,lager:3,baecker:1},
+    malzHint:'Ein Stout basiert auf hellem Grundmalz plus Röstmalz.',
+    hefeHint:'Ein Stout wird mit obergäriger Ale-Hefe vergoren.'}
+};
+var GRUND = {
+  pils:  {name:'Pilsner Malz',desc:'Sehr hell, wenig Röstung',f:1,ebc:4},
+  pale:  {name:'Pale-Ale-Malz',desc:'Hell bis goldgelb, etwas kräftiger',f:1,ebc:8},
+  weizen:{name:'Weizenmalz',desc:'Gekeimter Weizen, hell',f:1,ebc:5},
+  roh:   {name:'Rohe Gerste',desc:'Ungekeimte Körner',f:0.45,ebc:4}
+};
+var SPEZ = {
+  keines:  {name:'Kein Spezialmalz',desc:'Nur Grundmalz',ebc:0},
+  karamell:{name:'Karamellmalz',desc:'Süsslich, bernsteinfarben, etwa 10 %',ebc:18},
+  rost:    {name:'Röstmalz',desc:'Stark geröstet, etwa 10 %',ebc:65}
+};
+var YEASTS = {
+  lager:  {name:'Lagerhefe',desc:'Untergärig, setzt sich am Boden ab',opt:[8,12],k:0.26},
+  ale:    {name:'Ale-Hefe',desc:'Obergärig, bildet oben Hefeschaum',opt:[17,21],k:0.40},
+  weizen: {name:'Weizenhefe',desc:'Obergärig, fruchtig-würzige Aromen',opt:[18,23],k:0.40},
+  baecker:{name:'Bäckerhefe',desc:'Normale Hefe für Brotteig',opt:[26,32],k:0.45}
+};
+var EBC_STOPS=[[0,[247,226,122]],[6,[242,207,85]],[12,[232,176,50]],[20,[208,138,28]],[30,[176,98,15]],[45,[122,58,12]],[65,[64,32,10]],[90,[26,13,5]]];
+function ebcColor(e){
+  e=clamp(e,0,90);
+  for(var i=1;i<EBC_STOPS.length;i++){
+    if(e<=EBC_STOPS[i][0]){
+      var a=EBC_STOPS[i-1],b=EBC_STOPS[i],t=(e-a[0])/(b[0]-a[0]),c=[0,1,2].map(function(k){return Math.round(a[1][k]+(b[1][k]-a[1][k])*t);});
+      return 'rgb('+c.join(',')+')';
+    }
+  }
+  return 'rgb(26,13,5)';
+}
+
+var QUIZ = [
+ [ {q:'Warum nimmt man zum Brauen Gerstenmalz und nicht einfach rohe Gerste?',
+    o:['Beim Mälzen keimt die Gerste und bildet Enzyme, die später Stärke zu Zucker abbauen.','Malz enthält schon fertigen Alkohol.','Rohe Gerste enthält keine Stärke.','Malz ist einfach billiger.'],
+    e:'Beim Mälzen lässt man Gerste keimen. Dabei entstehen Enzyme (Amylasen). Sie bauen beim Maischen die Stärke zu vergärbarem Zucker ab. Alkohol entsteht erst später durch die Hefe.'},
+   {q:'Zu welcher Gruppe von Lebewesen gehört die Hefe?',
+    o:['Einzellige Pilze','Bakterien','Algen','Viren'],
+    e:'Hefen sind einzellige Pilze. Sie vermehren sich durch Sprossung und leben vom Zucker.'},
+   {q:'Was bewirkt Röstmalz im Bier?',
+    o:['Es färbt das Bier dunkel und bringt Röstaromen wie Kaffee oder Schokolade.','Es erhöht den Alkoholgehalt stark.','Es macht das Bier heller.','Es ersetzt die Hefe.'],
+    e:'Röstmalz wird stark erhitzt. Es färbt das Bier dunkel und bringt Röstaromen. Typisch ist es für Stout und Porter.'} ],
+ [ {q:'Was passiert beim Maischen?',
+    o:['Enzyme bauen die Stärke aus dem Malz zu Zucker ab.','Die Hefe vergärt den Zucker zu Alkohol.','Dem Bier wird CO₂ zugesetzt.','Der Hopfen wird abgetrennt.'],
+    e:'Beim Maischen wird Malzschrot mit warmem Wasser vermischt. Die Enzyme zerlegen Stärke in Zucker. Die Hefe kommt erst viel später ins Spiel.'},
+   {q:'Warum darf die Maische nicht zu heiss werden (über etwa 78 °C)?',
+    o:['Enzyme sind Eiweisse und werden bei zu hoher Temperatur zerstört.','Weil sonst der Alkohol verdampft.','Weil die Hefe sonst zu schnell wächst.','Weil Zucker schon bei 78 °C verbrennt.'],
+    e:'Enzyme sind Eiweisse. Bei zu hoher Temperatur verändern sie ihre Form (Denaturierung) und funktionieren nicht mehr. Alkohol gibt es in dieser Phase noch gar nicht.'},
+   {q:'Wozu dient beim Maischen die Jodprobe?',
+    o:['Sie zeigt, ob noch Stärke vorhanden ist: Bleibt die Probe gelbbraun, ist die Stärke abgebaut.','Sie misst den Alkoholgehalt.','Sie zeigt, ob die Hefe noch lebt.','Sie misst die Bitterkeit des Hopfens.'],
+    e:'Jod färbt Stärke blauschwarz. Bleibt die Probe gelbbraun, ist die Stärke abgebaut und die Maische fertig verzuckert.'} ],
+ [ {q:'Warum muss die Würze vor der Hefezugabe abgekühlt werden?',
+    o:['Hefe besteht aus lebenden Zellen, die bei zu hoher Temperatur absterben.','Weil heisse Würze keinen Zucker enthält.','Damit der Hopfen auskristallisiert.','Damit das CO₂ entweicht.'],
+    e:'Hefezellen sind Lebewesen. Über etwa 40 °C sterben sie ab. Darum wird die Würze vor dem Anstellen auf die passende Gärtemperatur gekühlt.'},
+   {q:'Wozu dient der Hopfen im Bier?',
+    o:['Er gibt Bitterstoffe und Aroma und macht das Bier haltbarer.','Er liefert den Alkohol.','Er liefert den Zucker für die Hefe.','Er macht das Bier gelb.'],
+    e:'Hopfen liefert Bitterstoffe und Aroma und wirkt konservierend. Der Zucker kommt aus dem Malz, der Alkohol entsteht durch die Hefe.'},
+   {q:'Wie unterscheiden sich Bitterhopfen und Aromahopfen?',
+    o:['Bitterhopfen wird lange gekocht, damit sich die Bitterstoffe lösen. Aromahopfen kommt spät dazu, damit die Duftstoffe erhalten bleiben.','Bitterhopfen enthält Zucker, Aromahopfen enthält Alkohol.','Bitterhopfen wird erst nach der Gärung zugegeben.','Es gibt keinen Unterschied.'],
+    e:'Die Bitterstoffe lösen sich erst beim längeren Kochen. Die flüchtigen Aromastoffe gehen beim Kochen verloren und werden deshalb erst spät oder kalt zugegeben.'} ],
+ [ {q:'Welche Wortgleichung beschreibt die alkoholische Gärung richtig?',
+    o:['Traubenzucker → Alkohol + Kohlenstoffdioxid (+ Energie)','Traubenzucker + Sauerstoff → Kohlenstoffdioxid + Wasser','Alkohol + Kohlenstoffdioxid → Traubenzucker','Stärke → Alkohol + Sauerstoff'],
+    e:'Hefe baut Traubenzucker ohne Sauerstoff zu Alkohol (Ethanol) und Kohlenstoffdioxid ab und gewinnt dabei etwas Energie. Die zweite Gleichung beschreibt die Zellatmung.'},
+   {q:'Woher kommen die Gasblasen und der Schaum im Gärbehälter?',
+    o:['Das Gas ist Kohlenstoffdioxid (CO₂), das die Hefe beim Zuckerabbau bildet.','Das Gas ist Sauerstoff aus der Luft.','Das Gas ist verdampfender Alkohol.','Das Gas ist Wasserdampf.'],
+    e:'Bei der Gärung entstehen Alkohol und CO₂ im Verhältnis 1:1 (pro Zuckermolekül je zwei davon). Das CO₂ steigt als Gas auf und bildet den Schaum.'},
+   {q:'Wie unterscheiden sich unter- und obergärige Hefen?',
+    o:['Untergärige Hefen arbeiten bei kühleren Temperaturen und setzen sich unten ab. Obergärige gären wärmer und bilden oben Schaum.','Untergärige Hefen brauchen Sauerstoff, obergärige nicht.','Obergärige Hefen bilden Alkohol, untergärige nicht.','Es gibt keinen Unterschied, nur der Name ist anders.'],
+    e:'Untergärige Hefe (Lagerbier) arbeitet bei etwa 8 bis 12 °C und sinkt zu Boden. Obergärige Hefe (Ale, Weizen) arbeitet bei etwa 16 bis 24 °C und bildet oben einen Schaum. Beide erzeugen Alkohol und CO₂.'} ],
+ [ {q:'Was passiert, wenn der vergärbare Zucker aufgebraucht ist?',
+    o:['Die Hefe hat keine Nahrung mehr und die Gärung kommt zum Stillstand.','Die Hefe stellt aus Alkohol neuen Zucker her.','Die Gärung läuft ohne Zucker einfach weiter.','Das Bier wird automatisch alkoholfrei.'],
+    e:'Ohne Zucker kann die Hefe keine Gärung mehr betreiben. Der Alkohol bleibt im Bier, die Hefe setzt sich ab.'},
+   {q:'Warum steht Bier in einer verschlossenen Flasche unter Druck?',
+    o:['Das CO₂ kann nicht entweichen und bleibt im Bier gelöst.','Der Alkohol dehnt sich aus.','Die Hefe bildet Luft.','Die Flasche ist luftleer.'],
+    e:'In der geschlossenen Flasche bleibt das CO₂ im Bier gelöst. Öffnest du sie, sinkt der Druck und das Gas steigt als Bläschen auf.'},
+   {q:'Was bedeutet Kalthopfung?',
+    o:['Der Hopfen wird nach der Hauptgärung ins kühle Bier gegeben. Das bringt Aroma, aber kaum Bitterkeit.','Der Hopfen wird eingefroren.','Man gibt den Hopfen schon vor dem Maischen zu.','Das Bier wird auf unter 0 °C gekühlt.'],
+    e:'Beim Kalthopfen ziehen die Duftstoffe ins kühle Bier, ohne dass sich Bitterstoffe lösen. So entsteht das fruchtige Aroma, das man von IPAs kennt.'} ]
+];
+
+/* ---------- Modell ---------- */
+function tf(T, opt){
+  if(T>=opt[0] && T<=opt[1]) return 1;
+  var d = T<opt[0] ? opt[0]-T : T-opt[1];
+  return Math.max(0, 1-d/8);
+}
+function mashE(T,D){
+  var tfac;
+  if(T>=78) tfac=0;
+  else if(T>=62 && T<=72) tfac=1;
+  else if(T<62) tfac=Math.max(0,1-(62-T)/22);
+  else tfac=1-(T-72)/6*0.6;
+  var timef=Math.min(1,0.3+0.7*D/45);
+  return {tfac:tfac,timef:timef,e:tfac*timef};
+}
+function s0From(e){ return st.kg*2.1*(0.3+0.7*e)*GRUND[st.grund].f; }
+function ebcNow(){ if(!st.grund||!st.spez) return null; return GRUND[st.grund].ebc+SPEZ[st.spez].ebc; }
+function s0Now(){ if(!st.grund) return null; return s0From(mashE(st.mashT,st.mashD).e); }
+function ibuNow(){ return st.bitterG*Math.min(1,st.kochD/60)+st.aromaG*0.3; }
+function aromaNow(){ return st.aromaG+1.6*st.kaltG; }
+function makeSim(S0, hefe, T){
+  var y = YEASTS[hefe], F0 = 0.8*S0, f = tf(T,y.opt);
+  var q = 1 - y.k*f;
+  return function(t){
+    var F = F0*Math.pow(q,t);
+    var ferm = F0-F;
+    return {ferm:ferm, sugar:S0-ferm, alc:ferm*0.52, co2:ferm*10*0.49, deg:F0>0?ferm/F0:0};
+  };
+}
+function bandFor(step){
+  var S = st.style?STYLES[st.style]:null, y = st.hefe?YEASTS[st.hefe]:null;
+  if(!st.hints[step]||!S) return {};
+  if(step===1){
+    var f=st.grund?GRUND[st.grund].f:1;
+    return {mashT:[58,76], kg:[S.S0[0]/(2.1*f), S.S0[1]/(2.1*f)]};
+  }
+  if(step===2) return {kochD:[60,90], bitterG:[Math.max(0,S.ibu[0]-0.3*st.aromaG), Math.max(0,S.ibu[1]-0.3*st.aromaG)], anstT: y?[y.opt[0]-3,y.opt[1]+3]:null};
+  if(step===3) return {gaerT: y?[y.opt[0]-3,y.opt[1]+3]:null, gaerD:[5,10]};
+  if(step===4) return {lagerW:S.lager, lagerT:[0,8], kaltG:[Math.max(0,(S.aroma[0]-st.aromaG)/1.6), Math.max(0,(S.aroma[1]-st.aromaG)/1.6)]};
+  return {};
+}
+
+/* ---------- Zustand ---------- */
+var st, raf = 0;
+function newState(){
+  return { screen:'start', step:0, style:null, grund:null, spez:null, hefe:null,
+    kg:4, mashT:50, mashD:20, kochD:40, bitterG:10, aromaG:0, anstT:45, gaerT:25, gaerD:3, lagerW:0, lagerT:15, kaltG:0,
+    pts:[0,0,0,0,0], bonus:[0,0,0,0,0], fails:[0,0,0,0,0], res:[null,null,null,null,null],
+    hints:{}, S0:null, q:[null,null,null,null,null], best:(st&&st.best)||0 };
+}
+function total(){ var s=0; for(var i=0;i<5;i++) s+=st.pts[i]+st.bonus[i]; return s; }
+
+/* ---------- Auswertungen ---------- */
+function failRes(title,text,tip){ return {fail:{title:title,text:text,tip:tip}}; }
+
+function eval1(){
+  var S=STYLES[st.style], L=[], ebc=ebcNow();
+  var pm=S.fitMalz[st.grund];
+  if(st.grund==='roh') L.push({ok:false,t:'Rohe Gerste: Es fehlen die Enzyme, die beim Keimen entstehen. Die Stärke bleibt grösstenteils ungenutzt und du holst viel weniger Zucker heraus.'});
+  else if(pm>=4) L.push({ok:true,t:GRUND[st.grund].name+': Passt gut zu einem '+S.name+'. Beim Mälzen sind Enzyme entstanden, die später die Stärke abbauen.'});
+  else L.push({ok:false,t:GRUND[st.grund].name+' geht, ist für dieses Bier aber ungewöhnlich. '+S.malzHint});
+  var pc=5*fit(ebc,S.ebc[0],S.ebc[1],25);
+  if(pc>=4) L.push({ok:true,t:'Farbe: Etwa '+ebc+' EBC passt zum Stil.'});
+  else if(ebc<S.ebc[0]) L.push({ok:false,t:'Farbe: Mit etwa '+ebc+' EBC wird das Bier zu hell für ein '+S.name+'. Mit Karamell- oder Röstmalz wird es dunkler.'});
+  else L.push({ok:false,t:'Farbe: Mit etwa '+ebc+' EBC wird das Bier zu dunkel für ein '+S.name+'. Weniger Spezialmalz hilft.'});
+  var ph=S.fitHefe[st.hefe];
+  if(st.hefe==='baecker') L.push({ok:false,t:'Bäckerhefe gärt zwar, ist aber auf Brotteig gezüchtet. Das Bier schmeckt hefig und brotig.'});
+  else if(ph>=5) L.push({ok:true,t:YEASTS[st.hefe].name+': Die richtige Hefe für dieses Bier. '+YEASTS[st.hefe].desc+'.'});
+  else L.push({ok:false,t:YEASTS[st.hefe].name+' funktioniert, ist aber nicht typisch. '+S.hefeHint});
+  return {pts:pm+pc+ph, lines:L};
+}
+
+function eval2(){
+  var S=STYLES[st.style], T=st.mashT, D=st.mashD, m=mashE(T,D), L=[];
+  if(T>=78) return failRes('Fehlsud: Die Enzyme sind kaputt',
+    'Bei '+T+' °C werden die Enzyme zerstört (denaturiert). Enzyme sind Eiweisse und verändern bei Hitze ihre Form. Sie können keine Stärke mehr abbauen. Bei der Jodprobe bliebe die Maische blauschwarz.',
+    'Enzyme arbeiten gern warm, aber nicht heiss. Versuch es mit einer tieferen Temperatur.');
+  if(m.e<0.25) return failRes('Fehlsud: Die Stärke wurde kaum abgebaut',
+    'Bei '+T+' °C und '+D+' Minuten arbeiten die Enzyme viel zu wenig. Bei der Jodprobe bleibt die Maische blauschwarz. Das heisst: Es ist noch fast alles Stärke und kaum Zucker.',
+    'Die Enzyme brauchen es wärmer und etwas mehr Zeit.');
+  if(m.tfac===1) L.push({ok:true,t:'Temperatur: '+T+' °C liegt im Arbeitsbereich der Malz-Enzyme. Sie bauen die Stärke zu Zucker ab.'});
+  else if(T<62) L.push({ok:false,t:'Temperatur: '+T+' °C ist zu kühl. Die Enzyme arbeiten, aber langsam. Es entsteht weniger Zucker.'});
+  else L.push({ok:false,t:'Temperatur: '+T+' °C ist schon zu heiss. Ein Teil der Enzyme wird geschädigt, die Zuckerausbeute sinkt.'});
+  if(m.timef>=1) L.push({ok:true,t:'Rastzeit: '+D+' Minuten genügen, damit die Stärke fast vollständig abgebaut ist.'});
+  else L.push({ok:false,t:'Rastzeit: '+D+' Minuten sind zu kurz. Ein Teil der Stärke wird nicht mehr abgebaut.'});
+  var S0=s0From(m.e), fs=fit(S0,S.S0[0],S.S0[1],4);
+  if(fs===1) L.push({ok:true,t:'Stammwürze: '+r1(S0)+' °P passen zu einem '+S.name+'. Die Menge an Malz stimmt.'});
+  else if(S0<S.S0[0]) L.push({ok:false,t:'Stammwürze: '+r1(S0)+' °P sind zu wenig für ein '+S.name+' (Ziel '+S.S0[0]+' bis '+S.S0[1]+'). Das Bier wird dünn und alkoholarm. Mehr Malz oder bessere Maischbedingungen helfen.'});
+  else L.push({ok:false,t:'Stammwürze: '+r1(S0)+' °P sind zu viel für ein '+S.name+' (Ziel '+S.S0[0]+' bis '+S.S0[1]+'). Das Bier wird zu schwer und süss. Weniger Malz hilft.'});
+  return {pts:10*m.e+5*fs, e:m.e, S0:S0, lines:L};
+}
+
+function eval3(){
+  var S=STYLES[st.style], y=YEASTS[st.hefe], D=st.kochD, T=st.anstT, L=[], pk, ib=ibuNow();
+  if(T>=38) return failRes('Fehlsud: Die Hefe ist abgestorben',
+    'Du hast die Hefe bei '+T+' °C in die Würze gegeben. Hefezellen sind Lebewesen und sterben bei so hohen Temperaturen ab. Ohne lebende Hefe gibt es keine Gärung.',
+    'Die Würze muss vor dem Anstellen deutlich abkühlen. Wähle eine Temperatur, bei der sich deine Hefe wohlfühlt.');
+  if(D>=60 && D<=90) pk=4; else if(D<60) pk=4*(0.35+0.65*(D-30)/30); else pk=4-(D-90)/30;
+  if(D>=60 && D<=90) L.push({ok:true,t:'Kochen: '+D+' Minuten reichen. Die Würze wird keimfrei, die Bitterstoffe lösen sich und Eiweisse flocken aus.'});
+  else if(D<60) L.push({ok:false,t:'Kochen: '+D+' Minuten sind zu kurz. Die Bitterstoffe lösen sich nur teilweise und die Würze ist weniger keimfrei.'});
+  else L.push({ok:false,t:'Kochen: '+D+' Minuten sind lang. Zu viel Wasser verdampft und die Würze wird unnötig dunkel.'});
+  var pi=5*fit(ib,S.ibu[0],S.ibu[1],25);
+  if(pi>=4.5) L.push({ok:true,t:'Bitterkeit: '+Math.round(ib)+' IBU passen zu einem '+S.name+'.'});
+  else if(ib<S.ibu[0]) L.push({ok:false,t:'Bitterkeit: '+Math.round(ib)+' IBU sind zu wenig für ein '+S.name+' (Ziel '+S.ibu[0]+' bis '+S.ibu[1]+'). Mehr Bitterhopfen oder längeres Kochen hilft.'});
+  else L.push({ok:false,t:'Bitterkeit: '+Math.round(ib)+' IBU sind zu viel für ein '+S.name+' (Ziel '+S.ibu[0]+' bis '+S.ibu[1]+'). Das Bier schmeckt zu bitter.'});
+  var f=tf(T,y.opt);
+  if(f===1) L.push({ok:true,t:'Anstellen bei '+T+' °C: Genau die Temperatur, bei der sich deine Hefe wohlfühlt.'});
+  else if(T<y.opt[0]) L.push({ok:false,t:'Anstellen bei '+T+' °C: Für deine Hefe zu kühl. Sie startet nur langsam.'});
+  else L.push({ok:false,t:'Anstellen bei '+T+' °C: Für deine Hefe zu warm. Sie wird gestresst, das gibt später Fehlaromen.'});
+  return {pts:pk+pi+6*f, lines:L};
+}
+
+function eval4(){
+  var y=YEASTS[st.hefe], T=st.gaerT, D=st.gaerD, L=[];
+  if(T>=38) return failRes('Fehlsud: Die Hefe ist abgestorben',
+    'Bei '+T+' °C ist es für Hefezellen zu heiss. Sie sterben ab und die Gärung bricht sofort ab.',
+    'Hefe fühlt sich bei mässigen Temperaturen wohl. Wähle eine Temperatur im Bereich deiner Hefeart.');
+  var sim=makeSim(st.S0,st.hefe,T), end=sim(D), deg=end.deg;
+  if(deg<0.05) return failRes('Fehlsud: Die Gärung kommt nicht in Gang',
+    'Bei '+T+' °C ist deine Hefe so träge, dass in '+D+' Tagen fast kein Zucker umgesetzt wird. Die Würze bleibt süss und hat kaum Alkohol.',
+    'Deine Hefe braucht eine passendere Temperatur. Lagerhefe mag es kühl, Ale- und Weizenhefe milder, Bäckerhefe wärmer.');
+  var f=tf(T,y.opt), hot=T>y.opt[1]+2;
+  if(f===1) L.push({ok:true,t:'Gärtemperatur: '+T+' °C liegt im Wohlfühlbereich deiner Hefe.'});
+  else if(T<y.opt[0]) L.push({ok:false,t:'Gärtemperatur: '+T+' °C ist zu kühl. Die Hefe arbeitet langsam, die Gärung dauert lange.'});
+  else L.push({ok:false,t:'Gärtemperatur: '+T+' °C ist zu warm. Die Hefe arbeitet hektisch.'});
+  var pc=6*Math.min(1,deg/0.9);
+  if(deg>=0.9) L.push({ok:true,t:'Vergärung: '+Math.round(deg*100)+' % des vergärbaren Zuckers sind umgesetzt. Die Gärung ist praktisch fertig.'});
+  else L.push({ok:false,t:'Vergärung: Erst '+Math.round(deg*100)+' % des vergärbaren Zuckers sind umgesetzt. Es bleibt Restzucker und das Bier ist noch süss und alkoholarm. Mehr Zeit oder eine bessere Temperatur helfen.'});
+  var pf=hot?0:2;
+  if(hot) L.push({ok:false,t:'Fehlaromen: Bei zu warmer Gärung bilden sich unerwünschte Nebenprodukte (zum Beispiel Fuselalkohole) und das Bier schmeckt lösungsmittelartig.'});
+  else L.push({ok:true,t:'Aroma: Keine Fehlaromen, die Hefe konnte sauber arbeiten.'});
+  var tDone=Math.log(0.05)/Math.log(1-y.k*f);
+  if(deg>=0.99 && D>tDone+5) L.push({ok:true,t:'Hinweis: Die Gärung war schon lange vor dem Ende fertig. Du hättest Zeit sparen können.'});
+  return {pts:7*f+pc+pf, lines:L, sim:sim, hot:hot, deg:deg, end:end};
+}
+
+function eval5(){
+  var S=STYLES[st.style], W=st.lagerW, T=st.lagerT, L=[], ar=aromaNow();
+  if(T>=18 && W>=4) return failRes('Fehlsud: Das Bier ist umgekippt',
+    'Vier Wochen oder länger bei '+T+' °C: Das Bier wird bei dieser Wärme leicht von unerwünschten Mikroorganismen besiedelt und oxidiert. Es schmeckt sauer und muffig.',
+    'Zum Reifen gehört kühle Lagerung. Wähle eine deutlich tiefere Temperatur.');
+  var pw=4*fit(W,S.lager[0],S.lager[1],3);
+  if(pw>=3.5) L.push({ok:true,t:'Lagerdauer: '+W+(W===1?' Woche':' Wochen')+' passen zu einem '+S.name+'. Das Bier klärt sich, der Geschmack wird rund.'});
+  else if(W<S.lager[0]) L.push({ok:false,t:'Lagerdauer: '+W+(W===1?' Woche ist':' Wochen sind')+' zu kurz für ein '+S.name+' (Ziel '+S.lager[0]+' bis '+S.lager[1]+' Wochen). Das Jungbier schmeckt noch buttrig (Diacetyl) und ist trüb.'});
+  else L.push({ok:false,t:'Lagerdauer: '+W+' Wochen sind länger als nötig (Ziel '+S.lager[0]+' bis '+S.lager[1]+'). Bei diesem Stil verliert das Bier mit der Zeit Frische.'});
+  var pt = T<=8 ? 4 : Math.max(0,4-(T-8)*0.4);
+  if(T<=8) L.push({ok:true,t:'Lagertemperatur: '+T+' °C ist schön kühl. Das Bier reift sauber und bleibt stabil.'});
+  else if(T<=14) L.push({ok:false,t:'Lagertemperatur: '+T+' °C ist etwas warm. Das Bier reift schneller, aber weniger sauber.'});
+  else L.push({ok:false,t:'Lagertemperatur: '+T+' °C ist zu warm. Das Bier altert schnell und ist anfällig für Verderb.'});
+  var pa=7*fit(ar,S.aroma[0],S.aroma[1],60);
+  if(pa>=6) L.push({ok:true,t:'Hopfenaroma: Index '+Math.round(ar)+' passt zu einem '+S.name+'.'});
+  else if(ar<S.aroma[0]) L.push({ok:false,t:'Hopfenaroma: Index '+Math.round(ar)+' ist zu schwach (Ziel '+S.aroma[0]+' bis '+S.aroma[1]+'). Spät zugegebener Aromahopfen und Kalthopfung bringen mehr Duft.'});
+  else L.push({ok:false,t:'Hopfenaroma: Index '+Math.round(ar)+' ist zu stark (Ziel '+S.aroma[0]+' bis '+S.aroma[1]+'). Das Bier riecht zu stark nach Hopfen für diesen Stil.'});
+  return {pts:pw+pt+pa, lines:L};
+}
+var EVALS=[eval1,eval2,eval3,eval4,eval5];
+
+/* ---------- Bilder (SVG) ---------- */
+function glassSVG(id,ebc,withFoam,animate){
+  var col=ebcColor(ebc), clip='gc_'+id;
+  var path='M15 10 L85 10 L78 125 Q77 132 70 132 L30 132 Q23 132 22 125 Z';
+  var bub='';
+  for(var i=0;i<7;i++){ bub+='<circle class="bub" cx="'+(30+i*7)+'" cy="118" r="'+(1.5+(i%3)*0.7)+'" fill="#fff" fill-opacity=".7" style="animation-delay:'+(i*0.45)+'s;--bd:'+(2.4+(i%3)*0.5)+'s"/>'; }
+  return '<defs><clipPath id="'+clip+'"><path d="'+path+'"/></clipPath></defs>'+
+    '<g clip-path="url(#'+clip+')"><rect id="'+id+'_beer" class="'+(animate?'fillbeer':'')+'" x="0" y="24" width="100" height="112" fill="'+col+'"/>'+
+    (withFoam?'<g class="'+(animate?'foam':'')+'"><rect x="0" y="6" width="100" height="22" rx="8" fill="#fffdf5"/><circle cx="30" cy="12" r="6" fill="#fffdf5"/><circle cx="52" cy="9" r="7" fill="#fffdf5"/><circle cx="72" cy="12" r="6" fill="#fffdf5"/></g>':'')+
+    bub+'</g>'+
+    '<path d="'+path+'" fill="none" stroke="#6f7a76" stroke-width="3" stroke-linejoin="round"/>'+
+    '<path d="M24 22 L29 118" stroke="#fff" stroke-opacity=".55" stroke-width="3" stroke-linecap="round"/>';
+}
+function glassMini(ebc){ return '<svg class="glassmini" viewBox="0 0 100 140" aria-hidden="true">'+glassSVG('gm'+Math.round(ebc),ebc,true,false)+'</svg>'; }
+function thermo(id,x,y,label){
+  return '<g transform="translate('+x+','+y+')"><rect x="0" y="0" width="16" height="104" rx="8" fill="#fff" stroke="#8a8f94" stroke-width="2"/>'+
+    '<rect id="'+id+'_m" x="4" y="98" width="8" height="2" rx="4" fill="#c0392b"/><circle cx="8" cy="112" r="11" fill="#c0392b" stroke="#8a8f94" stroke-width="2"/>'+
+    '<text x="8" y="146" text-anchor="middle" class="svt" id="'+id+'_t">–</text><text x="8" y="162" text-anchor="middle" class="svs">'+label+'</text></g>';
+}
+function setThermo(id,v,min,max,unit){
+  var m=document.getElementById(id+'_m'); if(!m) return;
+  var h=clamp((v-min)/(max-min),0,1)*92;
+  m.setAttribute('y',String(98-h)); m.setAttribute('height',String(h+4));
+  document.getElementById(id+'_t').textContent=v+' '+unit;
+}
+function hop(x,y,delay,cls){
+  return '<g transform="translate('+x+','+y+')"><g class="'+cls+'" style="animation-delay:'+delay+'s"><path d="M0,-14 C8,-10 10,2 0,14 C-10,2 -8,-10 0,-14Z" fill="#7cb85a" stroke="#3d7a2a" stroke-width="1.5"/>'+
+    '<path d="M-5,-6 Q0,-2 5,-6 M-6,0 Q0,4 6,0 M-4,6 Q0,9 4,6" fill="none" stroke="#3d7a2a" stroke-width="1.2"/><path d="M0,-14 L0,-19" stroke="#3d7a2a" stroke-width="2"/></g></g>';
+}
+function potDefs(){
+  return '<defs><linearGradient id="cu" x1="0" x2="1"><stop offset="0" stop-color="#b86f33"/><stop offset=".5" stop-color="#e09a58"/><stop offset="1" stop-color="#a45f28"/></linearGradient></defs>';
+}
+function sceneIngredients(){
+  var ear='<g transform="translate(70,0)"><path d="M0,170 C2,130 -2,100 0,40" fill="none" stroke="#9a8a3a" stroke-width="4"/>';
+  for(var i=0;i<6;i++){ var y=48+i*16; ear+='<ellipse cx="-8" cy="'+y+'" rx="6" ry="11" transform="rotate(-25 -8 '+y+')" fill="#e6c869" stroke="#9a8a3a"/><ellipse cx="8" cy="'+(y+7)+'" rx="6" ry="11" transform="rotate(25 8 '+(y+7)+')" fill="#e6c869" stroke="#9a8a3a"/>'; }
+  ear+='<path d="M-8,48 L-30,10 M0,38 L0,0 M8,55 L30,14" stroke="#9a8a3a" stroke-width="1.5"/></g>';
+  return '<svg class="scene" viewBox="0 0 640 200" role="img" aria-label="Zutaten: Gerstenähre, Hopfendolde, Hefezelle und Wasser">'+
+    ear+'<text x="70" y="192" text-anchor="middle" class="svl">Malz</text>'+
+    '<g transform="translate(190,0)"><path d="M0,0 C10,20 -12,40 0,60" fill="none" stroke="#3d7a2a" stroke-width="3"/></g>'+hop(190,85,0,'')+hop(176,115,0,'')+hop(204,118,0,'')+'<text x="190" y="192" text-anchor="middle" class="svl">Hopfen</text>'+
+    '<g transform="translate(310,100)"><circle r="42" fill="#efe3c4" stroke="#a8935a" stroke-width="3"/><circle cx="-12" cy="-8" r="13" fill="#cdb98a" stroke="#a8935a"/><circle cx="14" cy="14" r="4" fill="#a8935a"/><circle cx="18" cy="-14" r="3" fill="#a8935a"/>'+
+    '<g class="budding"><circle cx="44" cy="-26" r="20" fill="#efe3c4" stroke="#a8935a" stroke-width="3"/></g></g><text x="310" y="192" text-anchor="middle" class="svl">Hefe (Einzeller)</text>'+
+    '<g transform="translate(430,60)"><path d="M0,0 C18,34 28,50 28,68 A28,28 0 1 1 -28,68 C-28,50 -18,34 0,0Z" fill="#a9d4f0" stroke="#5a9cc4" stroke-width="3"/><path d="M-12,70 Q-10,84 2,88" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-opacity=".8"/></g><text x="430" y="192" text-anchor="middle" class="svl">Wasser</text>'+
+    '<g transform="translate(510,20)"><svg width="120" height="168" viewBox="0 0 100 140">'+glassSVG('pv',ebcNow()===null?8:ebcNow(),true,false)+'</svg></g>'+
+    '</svg>';
+}
+function sceneMash(){
+  var steam=''; for(var i=0;i<3;i++) steam+='<path class="steam" d="M'+(250+i*50)+',60 q10,-12 0,-24 q-10,-12 0,-24" fill="none" stroke="#9aa5a0" stroke-width="5" stroke-linecap="round" style="animation-delay:'+(i*1.1)+'s"/>';
+  return '<svg class="scene" viewBox="0 0 640 200" role="img" aria-label="Maischbottich mit Rührwerk und Thermometer">'+potDefs()+
+    '<ellipse cx="300" cy="190" rx="130" ry="7" fill="#000" opacity=".08"/>'+
+    '<g id="steamg">'+steam+'</g>'+
+    '<rect x="190" y="76" width="220" height="108" rx="14" fill="url(#cu)" stroke="#8a4f1f" stroke-width="2"/>'+
+    '<ellipse cx="300" cy="76" rx="110" ry="14" fill="#8a4f1f"/><ellipse cx="300" cy="78" rx="102" ry="10" fill="#d9b46a"/>'+
+    '<circle cx="250" cy="78" r="2" fill="#b58a3c"/><circle cx="320" cy="81" r="2" fill="#b58a3c"/><circle cx="352" cy="77" r="2" fill="#b58a3c"/>'+
+    '<g class="stir"><line x1="300" y1="26" x2="300" y2="82" stroke="#6b4a2b" stroke-width="5" stroke-linecap="round"/><rect x="286" y="66" width="28" height="8" rx="3" fill="#6b4a2b"/></g>'+
+    '<text x="300" y="150" text-anchor="middle" class="svs" fill="#fff" style="fill:#fff;font-weight:600">Maischbottich</text>'+
+    thermo('thm',500,14,'Maische')+
+    '</svg>';
+}
+function sceneKoch(){
+  var bubs=''; for(var i=0;i<7;i++) bubs+='<circle class="bubp" cx="'+(236+i*22)+'" cy="'+(80+(i%2)*3)+'" r="'+(4+(i%3))+'" fill="#f6dc8a" stroke="#c9a23c" style="animation-delay:'+(i*0.18)+'s"/>';
+  var steam=''; for(var j=0;j<3;j++) steam+='<path class="steam" d="M'+(250+j*50)+',60 q10,-12 0,-24 q-10,-12 0,-24" fill="none" stroke="#9aa5a0" stroke-width="5" stroke-linecap="round" style="animation-delay:'+(j*1.0)+'s"/>';
+  return '<svg class="scene" viewBox="0 0 640 200" role="img" aria-label="Sudpfanne mit kochender Würze, Hopfen und Thermometer">'+potDefs()+
+    '<ellipse cx="300" cy="192" rx="130" ry="6" fill="#000" opacity=".08"/>'+
+    '<g>'+steam+'</g>'+
+    '<rect x="190" y="76" width="220" height="102" rx="14" fill="url(#cu)" stroke="#8a4f1f" stroke-width="2"/>'+
+    '<ellipse cx="300" cy="76" rx="110" ry="14" fill="#8a4f1f"/><ellipse cx="300" cy="78" rx="102" ry="10" fill="#e0b04a"/>'+bubs+
+    '<g transform="translate(260,178)"><path class="flame" d="M0,0 C-6,-8 -2,-16 0,-22 C2,-16 6,-8 0,0Z" fill="#f08a24"/></g><g transform="translate(300,178)"><path class="flame" style="animation-delay:.2s" d="M0,0 C-7,-9 -2,-18 0,-26 C2,-18 7,-9 0,0Z" fill="#f2a12c"/></g><g transform="translate(340,178)"><path class="flame" style="animation-delay:.4s" d="M0,0 C-6,-8 -2,-16 0,-22 C2,-16 6,-8 0,0Z" fill="#f08a24"/></g>'+
+    hop(270,30,0,'dropin')+hop(310,30,1.4,'dropin')+hop(350,30,2.8,'dropin')+
+    '<text x="300" y="150" text-anchor="middle" class="svs" style="fill:#fff;font-weight:600">Sudpfanne</text>'+
+    thermo('tha',500,14,'Anstellen')+
+    '</svg>';
+}
+function sceneTank(){
+  var bubs='', i;
+  for(i=0;i<9;i++) bubs+='<circle class="bub" cx="'+(272+i*12)+'" cy="150" r="'+(2+(i%3))+'" fill="#fff" fill-opacity=".75" style="animation-delay:'+(i*0.37)+'s"/>';
+  var cells=''; for(i=0;i<8;i++) cells+='<g class="cellfloat" style="animation-delay:'+(i*0.5)+'s"><circle cx="'+(274+i*13)+'" cy="'+(96+(i*17)%54)+'" r="4.5" fill="#efe3c4" stroke="#a8935a"/><circle cx="'+(280+i*13)+'" cy="'+(92+(i*17)%54)+'" r="2.4" fill="#efe3c4" stroke="#a8935a"/></g>';
+  return '<svg class="scene" id="tankscene" viewBox="0 0 640 200" role="img" aria-label="Gärtank mit aufsteigenden CO₂-Blasen und Hefezellen">'+
+    '<defs><clipPath id="tankclip"><polygon points="262,64 378,64 378,122 344,166 296,166 262,122"/></clipPath></defs>'+
+    '<ellipse cx="320" cy="190" rx="90" ry="6" fill="#000" opacity=".08"/>'+
+    '<polygon points="256,56 384,56 384,124 348,172 292,172 256,124" fill="#dfe5e2" stroke="#7d8a85" stroke-width="3"/>'+
+    '<g clip-path="url(#tankclip)"><rect id="tankbeer" x="250" y="64" width="140" height="110" fill="#e8b032"/><rect x="250" y="64" width="140" height="10" fill="#fffdf5" opacity=".9"/>'+bubs+cells+'</g>'+
+    '<rect x="312" y="36" width="16" height="20" fill="#bcc6c1" stroke="#7d8a85" stroke-width="2"/>'+
+    '<path d="M320,36 L320,22 Q320,12 334,12 Q348,12 348,24 L348,40" fill="none" stroke="#7d8a85" stroke-width="3"/>'+
+    '<circle class="bub blip" cx="342" cy="30" r="3" fill="#7d8a85" fill-opacity=".55" style="--bd:2s"/>'+
+    '<text x="320" y="128" text-anchor="middle" class="svs" style="fill:#4a5550;font-weight:600">Gärtank</text>'+
+    '<text x="398" y="34" class="svs">CO₂ entweicht</text><path d="M352,20 L392,30" stroke="#9aa5a0" stroke-dasharray="3 3"/>'+
+    thermo('thg',500,14,'Gärung')+
+    '</svg>';
+}
+function sceneLager(){
+  var flakes=''; var pts=[[190,50],[430,56],[170,128],[455,132],[210,170],[420,176]];
+  pts.forEach(function(p,k){ flakes+='<g class="snow" style="animation-delay:'+(k*0.4)+'s" transform="translate('+p[0]+','+p[1]+')" stroke="#6aaad0" stroke-width="2" stroke-linecap="round"><path d="M0,-9 V9 M-8,-4.5 L8,4.5 M-8,4.5 L8,-4.5"/></g>'; });
+  return '<svg class="scene" viewBox="0 0 640 200" role="img" aria-label="Kühler Lagerkeller mit Fass und Thermometer">'+
+    '<ellipse cx="310" cy="188" rx="120" ry="7" fill="#000" opacity=".08"/>'+flakes+
+    '<rect x="220" y="64" width="180" height="116" rx="34" fill="#b9854e" stroke="#7a5128" stroke-width="3"/>'+
+    '<rect x="250" y="64" width="9" height="116" fill="#6f4a26"/><rect x="361" y="64" width="9" height="116" fill="#6f4a26"/>'+
+    '<path d="M228,96 H392 M226,148 H394" stroke="#8d6236" stroke-width="2"/>'+
+    '<circle cx="310" cy="122" r="12" fill="#6f4a26" stroke="#4a3018" stroke-width="2"/><text x="310" y="212" text-anchor="middle" class="svs"> </text>'+
+    '<g id="kalthop" style="opacity:0">'+hop(290,12,0,'dropin')+hop(330,12,1.6,'dropin')+'</g>'+
+    '<text x="310" y="58" text-anchor="middle" class="svl"> </text>'+
+    thermo('thl',500,14,'Lagerkeller')+
+    '</svg>';
+}
+function sceneFor(i){ return [sceneIngredients,sceneMash,sceneKoch,sceneTank,sceneLager][i](); }
+
+/* ---------- Anzeigen ---------- */
+function gaugesFor(i){
+  var S=STYLES[st.style];
+  if(i===0) return [{id:'ebc',label:'Farbe',unit:'EBC',min:0,max:100,win:S.ebc,val:ebcNow,dec:0}];
+  if(i===1) return [{id:'s0',label:'Stammwürze (Prognose)',unit:'°P',min:4,max:20,win:S.S0,val:s0Now,dec:1}];
+  if(i===2) return [{id:'ibu',label:'Bitterkeit',unit:'IBU',min:0,max:100,win:S.ibu,val:ibuNow,dec:0}];
+  if(i===4) return [{id:'aro',label:'Hopfenaroma (Index)',unit:'',min:0,max:220,win:S.aroma,val:aromaNow,dec:0}];
+  return [];
+}
+function gaugeHTML(g){
+  var wl=(g.win[0]-g.min)/(g.max-g.min)*100, ww=(g.win[1]-g.win[0])/(g.max-g.min)*100;
+  return '<div class="gauge"><div class="gh"><span>'+g.label+'</span><b id="gv_'+g.id+'">–</b></div><div class="gbar"><i class="win" style="left:'+wl+'%;width:'+ww+'%"></i><i class="mk" id="gm_'+g.id+'" style="left:0%"></i></div><div class="gf">Ziel: '+g.win[0]+' bis '+g.win[1]+(g.unit?' '+g.unit:'')+'</div></div>';
+}
+function updateLive(){
+  var i=st.step; if(st.screen!=='station') return;
+  gaugesFor(i).forEach(function(g){
+    var v=g.val(), mk=document.getElementById('gm_'+g.id), tx=document.getElementById('gv_'+g.id);
+    if(!mk) return;
+    if(v===null){ tx.textContent='–'; mk.style.visibility='hidden'; return; }
+    mk.style.visibility='visible';
+    mk.style.left=(clamp((v-g.min)/(g.max-g.min),0,1)*100)+'%';
+    mk.className='mk'+(v>=g.win[0]&&v<=g.win[1]?' in':'');
+    tx.textContent=v.toFixed(g.dec)+(g.unit?' '+g.unit:'');
+  });
+  if(i===0){ var e=ebcNow(), b=document.getElementById('pv_beer'); if(b&&e!==null) b.setAttribute('fill',ebcColor(e)); }
+  if(i===1){ setThermo('thm',st.mashT,40,90,'°C'); var sg=document.getElementById('steamg'); if(sg) sg.style.opacity=clamp((st.mashT-35)/50,0.05,1); }
+  if(i===2) setThermo('tha',st.anstT,4,60,'°C');
+  if(i===3){
+    setThermo('thg',st.gaerT,2,40,'°C');
+    var sc=document.getElementById('tankscene');
+    if(sc){
+      var y=YEASTS[st.hefe], f=st.gaerT>=38?0:tf(st.gaerT,y.opt)*y.k/0.45;
+      if(f<=0.02){ sc.classList.add('idle'); }
+      else { sc.classList.remove('idle'); sc.style.setProperty('--bd',(0.8+(1-clamp(f,0,1))*3.2)+'s'); }
+      var tb=document.getElementById('tankbeer'); if(tb) tb.setAttribute('fill', st.gaerT>=38?'#9a8f7a':'#e8b032');
+    }
+  }
+  if(i===4){ setThermo('thl',st.lagerT,0,20,'°C'); var kh=document.getElementById('kalthop'); if(kh) kh.style.opacity=st.kaltG>0?1:0; }
+}
+
+/* ---------- Rendering ---------- */
+function setHeader(){
+  var h='';
+  for(var i=0;i<5;i++){
+    var cls = st.screen==='final' ? 'done' : (i<st.step ? 'done' : (i===st.step && (st.screen!=='start'&&st.screen!=='style') ? 'cur':''));
+    h+='<li class="'+cls+'"'+(cls==='cur'?' aria-current="step"':'')+'>'+NAMES[i]+'</li>';
+  }
+  stepsEl.innerHTML=h;
+  xpEl.textContent = total()+' Punkte';
+}
+function stopAnim(){ if(raf){ cancelAnimationFrame(raf); raf=0; } }
+function render(){
+  stopAnim();
+  setHeader();
+  var s=st.screen;
+  if(s==='start') renderStart();
+  else if(s==='style') renderStyle();
+  else if(s==='station') renderStation();
+  else if(s==='fail') renderFail();
+  else if(s==='result') renderResult();
+  else if(s==='quiz') renderQuiz();
+  else renderFinal();
+  window.scrollTo(0,0);
+}
+
+function renderStart(){
+  app.innerHTML =
+   '<div class="card"><h1>Vom Malz zum Bier</h1>'+
+   '<p class="lead">Du bist Braumeisterin oder Braumeister. Zuerst wählst du einen Bierstil, dann führst du dein Bier durch fünf Stationen. Rohstoffe, Mengen, Temperaturen und Zeiten stellst du selbst ein.</p>'+
+   '<ul><li>Zur Wahl stehen zwei Klassiker und zwei <b>Craft-Biere</b>. Jeder Stil hat eigene Zielwerte für Stammwürze, Bitterkeit, Farbe und Aroma.</li>'+
+   '<li>Nach jeder Station kommt eine Wissensfrage. Eine richtige Antwort gibt <b>5 Bonuspunkte</b> und einen <b>Tipp</b> für die nächste Station.</li>'+
+   '<li>Machst du einen groben Fehler, gibt es einen <b>Fehlsud</b>. Das ist nicht schlimm: Du erfährst, was schiefgelaufen ist, und versuchst es nochmals (2 Punkte Abzug).</li>'+
+   '<li>Am Ende gibt es eine Verkostung mit Punkten, Pokal und einer Übersicht, was du besser machen kannst.</li></ul>'+
+   '<p class="muted small">Dauer: etwa 15 bis 20 Minuten. Du brauchst nichts zu speichern und musst dich nicht anmelden.</p>'+
+   '<div class="actions"><button class="btn" id="go">Los geht es</button></div></div>';
+  document.getElementById('go').onclick=function(){ st.screen='style'; render(); };
+}
+
+function renderStyle(){
+  var h='<div class="card"><h2>Welches Bier willst du brauen?</h2><p>Jeder Stil hat andere Zielwerte. Die Craft-Biere sind anspruchsvoller, weil mehr Faktoren stimmen müssen.</p><div class="stylegrid" role="group" aria-label="Bierstil">';
+  Object.keys(STYLES).forEach(function(k){
+    var S=STYLES[k], mid=(S.ebc[0]+S.ebc[1])/2;
+    h+='<button type="button" class="stylecard" data-style="'+k+'" aria-pressed="'+(st.style===k)+'">'+glassMini(mid)+
+       '<b>'+esc(S.name)+'</b><div><span class="badge'+(S.craft?' craft':'')+'">'+(S.craft?'Craft':'Klassiker')+'</span><span class="badge">'+S.level+'</span></div>'+
+       '<p>'+esc(S.desc)+'</p><span class="small muted">Alkohol: '+S.abv+'</span></button>';
+  });
+  h+='</div><div class="actions"><button class="btn" id="go"'+(st.style?'':' disabled')+'>Mit diesem Stil brauen</button></div></div>';
+  app.innerHTML=h;
+  Array.prototype.forEach.call(app.querySelectorAll('button.stylecard'),function(b){
+    b.onclick=function(){
+      st.style=b.dataset.style;
+      Array.prototype.forEach.call(app.querySelectorAll('button.stylecard'),function(o){ o.setAttribute('aria-pressed',o===b?'true':'false'); });
+      document.getElementById('go').disabled=false;
+    };
+  });
+  document.getElementById('go').onclick=function(){ st.screen='station'; st.step=0; render(); };
+}
+
+function choiceGroup(key,title,map){
+  var h='<h3>'+title+'</h3><div class="choices" role="group" aria-label="'+title+'">';
+  Object.keys(map).forEach(function(k){
+    var o=map[k];
+    h+='<button type="button" class="choice" data-key="'+key+'" data-val="'+k+'" aria-pressed="'+(st[key]===k)+'"><b>'+esc(o.name)+'</b><span>'+esc(o.desc)+'</span></button>';
+  });
+  return h+'</div>';
+}
+function slider(id,label,min,max,stp,unit,band,scaleL,scaleR){
+  var bh='';
+  if(band){ var a=(band[0]-min)/(max-min)*100, b=(band[1]-min)/(max-min)*100;
+    bh='<div class="band" style="left:'+clamp(a,0,100)+'%;width:'+Math.max(2,clamp(b,0,100)-clamp(a,0,100))+'%"></div>'; }
+  return '<div class="ctl"><div class="row"><label for="'+id+'">'+label+'</label><output id="o_'+id+'">'+st[id]+' '+unit+'</output></div>'+
+    '<div class="track">'+bh+'<input type="range" id="'+id+'" min="'+min+'" max="'+max+'" step="'+stp+'" value="'+st[id]+'" data-unit="'+unit+'"></div>'+
+    '<div class="scale"><span>'+scaleL+'</span><span>'+scaleR+'</span></div></div>';
+}
+function tipBox(step){
+  if(!st.hints[step]) return '';
+  return '<div class="tip"><b>Tipp aus deiner Quizfrage:</b> Der hellgrüne Bereich auf den Reglern zeigt, wo du suchen solltest.</div>';
+}
+function targetCard(){
+  var S=STYLES[st.style];
+  return '<div class="target"><b>Dein Zielbier: '+esc(S.name)+'</b> '+(S.craft?'<span class="badge craft">Craft</span>':'')+'<br>'+
+    '<span class="tv">Stammwürze '+S.S0[0]+' bis '+S.S0[1]+' °P</span><span class="tv">Bitterkeit '+S.ibu[0]+' bis '+S.ibu[1]+' IBU</span>'+
+    '<span class="tv">Farbe '+S.ebc[0]+' bis '+S.ebc[1]+' EBC</span><span class="tv">Reifung '+S.lager[0]+(S.lager[1]!==S.lager[0]?' bis '+S.lager[1]:'')+' Wochen</span></div>';
+}
+function gaugeBlock(i){ var g=gaugesFor(i); if(!g.length) return ''; return '<div class="gauges">'+g.map(gaugeHTML).join('')+'</div>'; }
+
+function renderStation(){
+  var i=st.step, b=bandFor(i), S=STYLES[st.style], h='<div class="card">';
+  if(i===0){
+    h+='<h2>Station 1: Rohstoffe</h2><p>Bier besteht aus Wasser, Malz, Hopfen und Hefe. Wähle Grundmalz, Spezialmalz und Hefe passend zu deinem Bierstil.</p>'+targetCard()+sceneFor(0)+gaugeBlock(0)+
+       choiceGroup('grund','Grundmalz',GRUND)+choiceGroup('spez','Spezialmalz',SPEZ)+choiceGroup('hefe','Hefe',YEASTS);
+  } else if(i===1){
+    h+='<h2>Station 2: Maischen</h2><p>Das Malz wird geschrotet und mit warmem Wasser vermischt. Die Enzyme aus dem Malz sollen die Stärke zu Zucker abbauen. Je mehr Malz, desto mehr Zucker steckt in der Würze (Stammwürze). Stelle Malzmenge, Temperatur und Rastzeit ein.</p>'+targetCard()+sceneFor(1)+gaugeBlock(1)+
+       tipBox(1)+slider('kg','Malzmenge (für 20 Liter)',2,10,0.5,'kg',b.kg,'2 kg','10 kg')+slider('mashT','Maischtemperatur',40,90,1,'°C',b.mashT,'40 °C','90 °C')+slider('mashD','Rastzeit',10,90,5,'min',null,'10 min','90 min');
+  } else if(i===2){
+    h+='<h2>Station 3: Würze kochen und kühlen</h2><p>Die Würze wird mit Hopfen gekocht. Bitterhopfen kommt zu Beginn in die Pfanne, Aromahopfen erst in den letzten Minuten. Danach wird die Würze abgekühlt und die Hefe zugegeben.</p>'+targetCard()+sceneFor(2)+gaugeBlock(2)+
+       tipBox(2)+slider('kochD','Kochdauer',30,120,5,'min',b.kochD,'30 min','120 min')+slider('bitterG','Bitterhopfen (zu Beginn)',0,80,5,'g',b.bitterG,'0 g','80 g')+slider('aromaG','Aromahopfen (letzte 10 Minuten)',0,80,5,'g',null,'0 g','80 g')+slider('anstT','Temperatur beim Anstellen (Hefe zugeben)',4,60,1,'°C',b.anstT,'4 °C','60 °C');
+  } else if(i===3){
+    h+='<h2>Station 4: Gärung</h2><p>Jetzt arbeitet die Hefe. Im Gärtank siehst du, wie lebhaft sie arbeitet: Je mehr Blasen aufsteigen, desto aktiver ist die Hefe bei der gewählten Temperatur. Stelle Gärtemperatur und Gärdauer ein.</p>'+targetCard()+sceneFor(3)+
+       tipBox(3)+slider('gaerT','Gärtemperatur',2,40,1,'°C',b.gaerT,'2 °C','40 °C')+slider('gaerD','Gärdauer',1,14,1,'Tage',b.gaerD,'1 Tag','14 Tage');
+  } else {
+    h+='<h2>Station 5: Reifung</h2><p>Das Jungbier lagert, bis es klar und rund im Geschmack ist. Bei der Kalthopfung kommt Hopfen ins kühle Bier und bringt Duft, aber keine zusätzliche Bitterkeit.</p>'+targetCard()+sceneFor(4)+gaugeBlock(4)+
+       tipBox(4)+slider('lagerW','Lagerdauer',0,8,1,'Wochen',b.lagerW,'0 Wochen','8 Wochen')+slider('lagerT','Lagertemperatur',0,20,1,'°C',b.lagerT,'0 °C','20 °C')+slider('kaltG','Kalthopfung',0,80,5,'g',b.kaltG,'0 g','80 g');
+  }
+  if(st.fails[i]>0) h+='<div class="box-warn small">Fehlversuche in dieser Station: '+st.fails[i]+'</div>';
+  h+='<div class="actions"><button class="btn" id="go"'+(i===0&&!(st.grund&&st.spez&&st.hefe)?' disabled':'')+'>'+(i===3?'Gärung starten':(i===4?'Bier abfüllen':'Weiter'))+'</button></div></div>';
+  app.innerHTML=h;
+  Array.prototype.forEach.call(app.querySelectorAll('button.choice'),function(btn){
+    btn.onclick=function(){
+      st[btn.dataset.key]=btn.dataset.val;
+      Array.prototype.forEach.call(app.querySelectorAll('button.choice[data-key="'+btn.dataset.key+'"]'),function(o){ o.setAttribute('aria-pressed',o===btn?'true':'false'); });
+      document.getElementById('go').disabled=!(st.grund&&st.spez&&st.hefe);
+      updateLive();
+    };
+  });
+  Array.prototype.forEach.call(app.querySelectorAll('input[type=range]'),function(inp){
+    inp.oninput=function(){ st[inp.id]=+inp.value; document.getElementById('o_'+inp.id).textContent=inp.value+' '+inp.dataset.unit; updateLive(); };
+  });
+  updateLive();
+  document.getElementById('go').onclick=function(){
+    var r=EVALS[i]();
+    if(r.fail){ st.fails[i]++; st.res[i]=r; st.screen='fail'; }
+    else {
+      r.final=Math.max(0,Math.round(r.pts)-RETRY_COST*st.fails[i]);
+      st.pts[i]=r.final; st.res[i]=r;
+      if(i===1) st.S0=r.S0;
+      st.screen='result';
+    }
+    render();
+  };
+}
+
+function renderFail(){
+  var i=st.step, f=st.res[i].fail;
+  app.innerHTML='<div class="card"><div class="box-bad"><h2>'+esc(f.title)+'</h2><p>'+esc(f.text)+'</p></div>'+
+    '<div class="tip"><b>Was du daraus lernst:</b> '+esc(f.tip)+'</div>'+
+    '<p class="muted small">Ein Fehlsud gehört zum Brauen dazu. Du versuchst die Station nochmals, das kostet '+RETRY_COST+' Punkte.</p>'+
+    '<div class="actions"><button class="btn" id="go">Station nochmals versuchen</button></div></div>';
+  document.getElementById('go').onclick=function(){ st.screen='station'; render(); };
+}
+
+function renderResult(){
+  var i=st.step, r=st.res[i], h='<div class="card"><h2>Ergebnis: '+NAMES[i]+'</h2>';
+  h+='<div class="score"><div class="bar" role="img" aria-label="'+r.final+' von '+MAXPTS+' Punkten"><i style="width:'+(r.final/MAXPTS*100)+'%"></i></div><b>'+r.final+' / '+MAXPTS+'</b></div>';
+  if(st.fails[i]>0) h+='<p class="muted small">Abzug für '+st.fails[i]+' Fehlversuch(e): −'+(RETRY_COST*st.fails[i])+' Punkte</p>';
+  if(i===3){
+    h+='<div class="legend" aria-hidden="true"><span class="l1">Zucker (°P)</span><span class="l2">Alkohol (Vol.-%)</span></div>'+
+       '<canvas id="chart" role="img" aria-label="Verlauf von Zucker und Alkohol während der Gärung"></canvas>'+
+       '<div class="readouts" aria-live="off"><div><b id="r_s">–</b><span>Zucker im Bier (°P)</span></div><div><b id="r_a">–</b><span>Alkohol (Vol.-%)</span></div><div><b id="r_c">–</b><span>CO₂ entstanden (g/L)</span></div></div>'+
+       '<div class="actions" style="margin-top:0"><button class="btn ghost" id="skip" type="button">Animation überspringen</button></div>'+
+       '<p class="muted small">Aus einem Zuckermolekül entstehen je zwei Moleküle Alkohol und CO₂. Das meiste CO₂ entweicht aber aus dem Gärbehälter, ein kleiner Teil bleibt im Bier gelöst.</p>';
+  }
+  h+='<ul class="fb">';
+  r.lines.forEach(function(l){ h+='<li class="'+(l.ok?'ok':'no')+'"><span class="mark">'+(l.ok?'gut':'besser')+'</span><span>'+esc(l.t)+'</span></li>'; });
+  h+='</ul><div class="actions"><button class="btn" id="go">Weiter zur Frage</button></div></div>';
+  app.innerHTML=h;
+  document.getElementById('go').onclick=function(){ st.screen='quiz'; render(); };
+  if(i===3) startChart(r);
+}
+
+function startChart(r){
+  var cv=document.getElementById('chart'), D=st.gaerD, S0=st.S0, sim=r.sim;
+  var dpr=window.devicePixelRatio||1, W=cv.clientWidth, H=cv.clientHeight;
+  cv.width=W*dpr; cv.height=H*dpr;
+  var ctx=cv.getContext('2d'); ctx.scale(dpr,dpr);
+  var ymax=Math.max(8,Math.ceil(S0/2)*2+1), L=44,R=12,T=12,B=30;
+  function X(t){ return L+(W-L-R)*t/D; }
+  function Y(v){ return T+(H-T-B)*(1-v/ymax); }
+  function draw(t){
+    ctx.clearRect(0,0,W,H);
+    ctx.font='12px "Source Sans 3",system-ui,sans-serif'; ctx.fillStyle='#555'; ctx.strokeStyle='#e2e2e2'; ctx.lineWidth=1;
+    var yt=ymax<=10?2:(ymax<=16?4:5);
+    for(var v=0;v<=ymax;v+=yt){ ctx.beginPath(); ctx.moveTo(L,Y(v)); ctx.lineTo(W-R,Y(v)); ctx.stroke(); ctx.textAlign='right'; ctx.fillText(String(v),L-6,Y(v)+4); }
+    var xs=D<=7?1:2; ctx.textAlign='center';
+    for(var d=0;d<=D;d+=xs){ ctx.fillText(String(d),X(d),H-12); }
+    ctx.textAlign='right'; ctx.fillText('Tage',W-R,H-12);
+    function line(key,color,dash){
+      ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=3; ctx.setLineDash(dash);
+      var n=Math.max(2,Math.round(t*20));
+      for(var k=0;k<=n;k++){ var tt=t*k/n, v2=sim(tt)[key]; if(k===0) ctx.moveTo(X(tt),Y(v2)); else ctx.lineTo(X(tt),Y(v2)); }
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+    line('sugar','#2f6b4a',[]); line('alc','#b86b00',[8,5]);
+    var c=sim(t);
+    document.getElementById('r_s').textContent=c.sugar.toFixed(1);
+    document.getElementById('r_a').textContent=c.alc.toFixed(1);
+    document.getElementById('r_c').textContent=c.co2.toFixed(0);
+  }
+  var reduce=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){ draw(D); document.getElementById('skip').style.display='none'; return; }
+  var t0=null, dur=4500;
+  function frame(ts){
+    if(t0===null) t0=ts;
+    var p=Math.min(1,(ts-t0)/dur); draw(D*p);
+    if(p<1) raf=requestAnimationFrame(frame); else raf=0;
+  }
+  draw(0.001);
+  raf=requestAnimationFrame(frame);
+  document.getElementById('skip').onclick=function(){ stopAnim(); draw(D); };
+}
+
+function renderQuiz(){
+  var i=st.step;
+  if(!st.q[i]){
+    var pick=QUIZ[i][Math.floor(Math.random()*QUIZ[i].length)];
+    var order=shuffle([0,1,2,3]);
+    st.q[i]={q:pick.q,e:pick.e,opts:order.map(function(k){return pick.o[k];}),right:order.indexOf(0),ans:null};
+  }
+  var q=st.q[i], h='<div class="card"><h2>Wissensfrage</h2><p class="lead">'+esc(q.q)+'</p><div class="qopts">';
+  q.opts.forEach(function(o,k){
+    var cls='qopt', tag='';
+    if(q.ans!==null){ if(k===q.right){cls+=' right';tag='<span class="tag">richtig</span>';} else if(k===q.ans){cls+=' wrong';tag='<span class="tag">falsch</span>';} }
+    h+='<button type="button" class="'+cls+'" data-k="'+k+'"'+(q.ans!==null?' disabled':'')+'>'+tag+esc(o)+'</button>';
+  });
+  h+='</div>';
+  if(q.ans!==null){
+    var ok=q.ans===q.right;
+    h+='<div class="'+(ok?'tip':'box-warn')+'"><b>'+(ok?'Richtig! +'+BONUS+' Punkte'+(i<4?' und ein Tipp für die nächste Station.':'.'):'Nicht ganz.')+'</b> '+esc(q.e)+'</div>'+
+       '<div class="actions"><button class="btn" id="go">'+(i<4?'Weiter zur nächsten Station':'Bier verkosten')+'</button></div>';
+  } else {
+    h+='<p class="hint-line">Eine falsche Antwort kostet keine Punkte, du bekommst dann einfach keinen Bonus.</p>';
+  }
+  h+='</div>';
+  app.innerHTML=h;
+  Array.prototype.forEach.call(app.querySelectorAll('button.qopt'),function(b){
+    b.onclick=function(){
+      q.ans=+b.dataset.k;
+      if(q.ans===q.right){ st.bonus[i]=BONUS; if(i<4) st.hints[i+1]=true; }
+      setHeader(); var y=window.scrollY; stopAnim(); renderQuiz(); window.scrollTo(0,y);
+    };
+  });
+  var go=document.getElementById('go');
+  if(go) go.onclick=function(){ if(i<4){ st.step=i+1; st.screen='station'; } else { st.screen='final'; if(total()>st.best) st.best=total(); } render(); };
+}
+
+function level(p){
+  if(p<35) return {name:'Fehlsud, aber viel gelernt',col:'#8a8a8a',txt:'Dieses Bier ist nicht gelungen. Schau dir unten an, wo es hakte, und braue es nochmals.'};
+  if(p<60) return {name:'Hausbier',col:'#a8693a',txt:'Trinkbar, aber mit Macken. Mit besseren Einstellungen geht mehr.'};
+  if(p<80) return {name:'Gutes Bier',col:'#9aa3ad',txt:'Ein ordentliches Bier. Wenige Feinheiten fehlen noch zum Meister.'};
+  return {name:'Meisterbier',col:'#d4a017',txt:'Hervorragend gebraut. Du verstehst, wie Malz, Hopfen, Hefe und Temperatur zusammenspielen.'};
+}
+function trophy(col){
+  return '<svg class="trophy" viewBox="0 0 120 120" role="img" aria-label="Pokal"><path d="M34 18h52v26c0 16-12 28-26 28S34 60 34 44z" fill="'+col+'"/><path d="M34 26H18c0 18 8 28 20 30M86 26h16c0 18-8 28-20 30" fill="none" stroke="'+col+'" stroke-width="7" stroke-linecap="round"/><rect x="54" y="70" width="12" height="18" fill="'+col+'"/><rect x="38" y="88" width="44" height="12" rx="4" fill="'+col+'"/></svg>';
+}
+function cmpRow(label,ist,win,unit,dec){
+  var ok=ist>=win[0]&&ist<=win[1];
+  return '<tr><td>'+label+'</td><td class="n">'+win[0]+'–'+win[1]+' '+unit+'</td><td class="n">'+ist.toFixed(dec)+' '+unit+'</td><td class="'+(ok?'ok':'no')+'">'+(ok?'im Ziel':(ist<win[0]?'zu tief':'zu hoch'))+'</td></tr>';
+}
+function renderFinal(){
+  var p=total(), lv=level(p), S=STYLES[st.style], y=YEASTS[st.hefe], r4=st.res[3], ebc=ebcNow(), ibu=ibuNow(), aro=aromaNow();
+  var h='<div class="card final-head">'+
+    '<svg class="finalglass" viewBox="0 0 100 140" role="img" aria-label="Frisch gezapftes '+esc(S.name)+'">'+glassSVG('fin',ebc,true,true)+'</svg>'+
+    trophy(lv.col)+'<h1>'+lv.name+'</h1><div class="big">'+p+' / 100</div><p>'+lv.txt+'</p></div>';
+  h+='<div class="card"><h2>Dein '+esc(S.name)+'</h2><div class="facts">'+
+     '<div><span>Grundmalz</span><b>'+esc(GRUND[st.grund].name)+'</b></div>'+
+     '<div><span>Spezialmalz</span><b>'+esc(SPEZ[st.spez].name)+'</b></div>'+
+     '<div><span>Hefe</span><b>'+esc(y.name)+'</b></div>'+
+     '<div><span>Alkoholgehalt</span><b>'+r4.end.alc.toFixed(1)+' Vol.-%</b></div>'+
+     '<div><span>Vergärung</span><b>'+Math.round(r4.deg*100)+' %</b></div>'+
+     '<div><span>Kalthopfung</span><b>'+st.kaltG+' g</b></div></div></div>';
+  h+='<div class="card"><h2>Verkostung: Soll und Ist</h2><table class="cmp"><thead><tr><th>Merkmal</th><th class="n">Ziel</th><th class="n">Dein Bier</th><th>Urteil</th></tr></thead><tbody>'+
+     cmpRow('Stammwürze',st.S0,S.S0,'°P',1)+cmpRow('Bitterkeit',ibu,S.ibu,'IBU',0)+cmpRow('Farbe',ebc,S.ebc,'EBC',0)+cmpRow('Hopfenaroma',aro,S.aroma,'',0)+cmpRow('Reifung',st.lagerW,S.lager,'Wo.',0)+'</tbody></table></div>';
+  h+='<div class="card"><h2>Punkte pro Station</h2><table><thead><tr><th>Station</th><th class="n">Station</th><th class="n">Quiz</th><th class="n">Fehlsude</th></tr></thead><tbody>';
+  for(var i=0;i<5;i++) h+='<tr><td>'+NAMES[i]+'</td><td class="n">'+st.pts[i]+' / '+MAXPTS+'</td><td class="n">'+st.bonus[i]+' / '+BONUS+'</td><td class="n">'+st.fails[i]+'</td></tr>';
+  h+='</tbody></table></div>';
+  var bad=[];
+  for(var j=0;j<5;j++) st.res[j].lines.forEach(function(l){ if(!l.ok) bad.push({s:NAMES[j],t:l.t}); });
+  h+='<div class="card"><h2>Das kannst du besser machen</h2>';
+  if(!bad.length) h+='<p>Nichts. Alle Einstellungen waren gut gewählt.</p>';
+  else { h+='<ul class="fb">'; bad.forEach(function(b){ h+='<li class="no"><span class="mark">'+esc(b.s)+'</span><span>'+esc(b.t)+'</span></li>'; }); h+='</ul>'; }
+  h+='</div><div class="card"><p class="muted small" style="margin:0">Bier ist ein Genussmittel mit Alkohol. In der Schweiz dürfen gegorene Getränke wie Bier und Wein erst ab 16 Jahren abgegeben werden, gebrannte Wasser ab 18. Beste Punktzahl in dieser Sitzung: '+st.best+'.</p></div>';
+  h+='<div class="actions"><button class="btn" id="again">Nochmals brauen</button><button class="btn ghost" id="other">Anderen Bierstil wählen</button></div>';
+  app.innerHTML=h;
+  document.getElementById('again').onclick=function(){ var s=st.style; st=newState(); st.style=s; st.screen='station'; render(); };
+  document.getElementById('other').onclick=function(){ st=newState(); st.screen='style'; render(); };
+}
+
+st=newState();
+render();
+})();
+</script>
+</body>
+</html>

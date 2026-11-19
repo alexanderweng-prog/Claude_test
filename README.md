@@ -12,6 +12,7 @@
 | `nut-lernlandkarte/` | NuT Lernlandkarte | Repo NuT-Gaming |
 | – | Naturalia – alle Reiche | eigenes Repo [Naturalia](https://github.com/alexanderweng-prog/Naturalia), verlinkt auf https://alexanderweng-prog.github.io/Naturalia/ |
 | `leistung/` | Leistung | Repo Leistungsaudio |
+| `braumeister/` | Braumeister · Vom Malz zum Bier | Repo Bierbrauen |
 | `sexualkunde/` | Pubertät & Zyklus | Repo Sexualkunde |
 | `sporttheorie/` | Sporttheorie | Repo sporttheorie |
 | `ruhepol/` | Ruhepol | Repo Atementspannung |
