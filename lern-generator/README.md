@@ -37,7 +37,7 @@ Eine Bewertung oder Textkorrektur kostet einen Bruchteil davon. Die echten Koste
 
 ## An die Klasse weitergeben
 
-- **Teilen**: erzeugt einen Link, in dem das ganze Paket steckt (Schüleransicht ohne Bearbeiten). Funktioniert nur, wenn die App im Internet liegt, z. B. über GitHub Pages.
+- **Teilen**: erzeugt einen Link, in dem das ganze Paket steckt (Schüleransicht ohne Bearbeiten). Funktioniert nur, wenn die App über eine Webadresse läuft (Docker-Container, siehe unten, oder GitHub Pages), nicht als lokale Datei.
 - **Export**: JSON-Datei; Lernende öffnen sie mit «Paket importieren».
 
 ## Wichtige Einschränkungen
