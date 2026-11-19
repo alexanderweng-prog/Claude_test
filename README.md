@@ -18,6 +18,8 @@
 | `sporttheorie/` | Sporttheorie | Repo sporttheorie |
 | `ruhepol/` | Ruhepol | Repo Atementspannung |
 
+Die **Lernwerkstatt** (Repo Container) liegt nicht hier, sondern läuft bei Vercel (https://lernwerkstatt-pi.vercel.app/), weil sie für die KI einen Server braucht. Die Kachel verlinkt dorthin.
+
 `kanti-trainer/` ist eine ältere Version des Kanti-Trainers und wird nicht verlinkt.
 
 Neue App hinzufügen: Ordner anlegen und in `index.html` eine Kachel (`<a class="card">`) kopieren.

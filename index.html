@@ -17,6 +17,7 @@
   --c-mathe: oklch(0.45 0.09 255); --c-mathe-bg: oklch(0.95 0.02 255);
   --c-nut: oklch(0.42 0.08 155);   --c-nut-bg: oklch(0.95 0.02 155);
   --c-sport: oklch(0.50 0.11 45);  --c-sport-bg: oklch(0.95 0.025 45);
+  --c-alle: oklch(0.45 0.10 300);  --c-alle-bg: oklch(0.95 0.025 300);
   --f-display: "Fraunces", Georgia, serif;
   --f-body: "Source Sans 3", Helvetica, Arial, sans-serif;
   color-scheme: light;
@@ -30,6 +31,7 @@
     --c-mathe: oklch(0.78 0.09 255); --c-mathe-bg: oklch(0.30 0.04 255);
     --c-nut: oklch(0.78 0.09 155);   --c-nut-bg: oklch(0.29 0.04 155);
     --c-sport: oklch(0.80 0.10 45);  --c-sport-bg: oklch(0.30 0.04 45);
+    --c-alle: oklch(0.80 0.09 300);  --c-alle-bg: oklch(0.30 0.04 300);
     color-scheme: dark;
   }
   :root:not([data-theme="light"]) .logo { filter: invert(1) hue-rotate(180deg); mix-blend-mode: normal; }
@@ -59,6 +61,7 @@ a.card:focus-visible { outline: 3px solid var(--fach); outline-offset: 2px; }
 .mathe { --fach: var(--c-mathe); --fach-bg: var(--c-mathe-bg); }
 .nut   { --fach: var(--c-nut);   --fach-bg: var(--c-nut-bg); }
 .sport { --fach: var(--c-sport); --fach-bg: var(--c-sport-bg); }
+.alle  { --fach: var(--c-alle);  --fach-bg: var(--c-alle-bg); }
 footer { border-top: 1px solid var(--line); padding-top: 14px; color: var(--muted); font-size: 14px; }
 @media (prefers-reduced-motion: reduce) { a.card { transition: none; } a.card:hover { transform: none; } }
 </style>
@@ -152,6 +155,17 @@ footer { border-top: 1px solid var(--line); padding-top: 14px; color: var(--mute
         <span class="tag">Mentaltraining</span>
         <h3>Ruhepol</h3>
         <p>Atem- und Entspannungsübungen.</p>
+      </a>
+    </div>
+  </section>
+
+  <section class="alle">
+    <h2>Für alle Fächer</h2>
+    <div class="grid">
+      <a class="card" href="https://lernwerkstatt-pi.vercel.app/">
+        <span class="tag">Alle Fächer · mit KI</span>
+        <h3>Lernwerkstatt</h3>
+        <p>Aus Unterrichtsmaterial wird ein Lernpaket mit Lernpfad und Spielen. Für die KI braucht es den Klassencode.</p>
       </a>
     </div>
   </section>
