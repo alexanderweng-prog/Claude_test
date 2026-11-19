@@ -992,6 +992,18 @@ a { color: var(--accent-text); }
 .worldmain .foot .logochip { background: #fff; border: 2px solid var(--line); border-radius: 10px; padding: 6px 10px; box-shadow: 0 2px 0 var(--line); }
 .worldmain .foot .logochip img { height: 28px; }
 
+/* Eigenes Kapitel: Lernwerkstatt */
+.werkstatt { background: linear-gradient(135deg, var(--surface), color-mix(in srgb, var(--sc) 14%, var(--surface))); border-color: color-mix(in srgb, var(--sc) 55%, var(--line)); }
+.ws-kopf { display: flex; gap: var(--space-3); align-items: center; margin-bottom: var(--space-2); }
+.ws-kopf > span:last-child { display: flex; flex-direction: column; gap: 2px; }
+.ws-icon { font-size: 34px; width: 52px; height: 52px; display: grid; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--sc) 22%, var(--surface)); flex: none; }
+.ws-liste { list-style: none; padding: 0; margin: var(--space-3) 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--space-2) var(--space-4); }
+.ws-liste li { display: flex; gap: var(--space-2); align-items: flex-start; }
+.ws-liste b { display: block; }
+.ws-liste small { color: var(--muted); }
+.ws-ticon { font-size: 20px; width: 28px; text-align: center; flex: none; }
+.werkstatt a.btn { display: flex; align-items: center; justify-content: center; text-decoration: none; text-align: center; }
+
 </style>
 </head>
 <body>
@@ -1100,6 +1112,21 @@ const FOG_REALMS = [
   ['8_4', 'Chemische Reaktionen'], ['9_1', 'Optische Phänomene'], ['9_2', 'Atommodelle'], ['9_3', 'Elektronische Schaltungen'], ['9_4', 'Energie und Leistung'],
   ['9_5', 'Genetik und Gentechnik'], ['9_6', 'Evolution'], ['9_7', 'Land-Ökosysteme'], ['9_8', 'Stoffkreisläufe']
 ];
+// Eigenes Kapitel: die Lernwerkstatt (eigene App im Repository «Container», läuft auf Vercel).
+// Sie hat keine festen Quests, sondern macht aus eigenem Material neue Lernpakete. Darum kein Reich auf der Karte.
+const WERKSTATT = {
+  url: 'https://lernwerkstatt-pi.vercel.app',
+  name: 'Werkstatt der Schriftgelehrten', icon: '\u{1FAB6}', color: '#2f6b4f',
+  lore: 'Hier schreiben die Gelehrten neue Schriftrollen: Aus eigenem Material entstehen Lernpfad, Rätsel und Prüfungen.',
+  teile: [
+    ['\u{1F4D6}', 'Lernpfad', 'Erklärungen Schritt für Schritt, mit Verständnisfrage'],
+    ['\u{1F3AF}', 'Flow-Training', 'Fragen passen sich laufend deinem Können an'],
+    ['\u{1F9E9}', 'Spiele', 'Kreuzworträtsel, Memory, Lückentext, Zuordnen, Reihenfolge, Quiz'],
+    ['\u{1F501}', 'Lernkartei', 'Was du falsch hattest, kommt gezielt wieder'],
+    ['\u{1F4AC}', 'Denkfragen und Texte', 'Rückmeldung durch die KI'],
+    ['\u{1F4CA}', 'Drei Niveaus', 'Dasselbe Thema, passend schwer']
+  ]
+};
 // Heldenrang über alle Reiche (Summe der XP)
 const HERO_RANKS = [
   { xp: 0, name: 'Wanderseele' }, { xp: 250, name: 'Abenteuerherz' }, { xp: 750, name: 'Klingenträger' },
@@ -6881,6 +6908,19 @@ function realmListHtml(per) {
     }).join('')}</div>`;
   }).join('');
 }
+function werkstattHtml() {
+  const w = WERKSTATT;
+  const teile = w.teile.map(t => `<li><span class="ws-ticon" aria-hidden="true">${t[0]}</span><span><b>${esc(t[1])}</b><small>${esc(t[2])}</small></span></li>`).join('');
+  return `<div class="row"><h2>Die Lernwerkstatt</h2><span class="small">eigenes Kapitel</span></div>
+    <p class="small">Neben den Reichen gibt es eine Werkstatt: Dort entstehen aus Unterrichtsmaterial neue Lernpakete, auch zu Themen ausserhalb von Natur und Technik.</p>
+    <div class="card werkstatt" style="--sc:${w.color}">
+      <div class="ws-kopf"><span class="ws-icon" aria-hidden="true">${w.icon}</span><span><span class="tag">Lernwerkstatt · mit KI</span><span class="btitle">${esc(w.name)}</span></span></div>
+      <p class="small"><i>${esc(w.lore)}</i></p>
+      <ul class="ws-liste">${teile}</ul>
+      <p class="small">Für die KI-Funktionen brauchst du den Klassencode deiner Lehrperson. Lernpakete, die sie dir per Link schickt, funktionieren auch ohne Code. Dein Fortschritt dort wird getrennt von Naturalia gespeichert.</p>
+      <a class="btn btn-primary block" href="${w.url}" target="_blank" rel="noopener">Werkstatt öffnen ↗</a>
+    </div>`;
+}
 function viewWorld() {
   const { per, tot } = worldTotals();
   const hr = heroRank(tot.xp), cur = HERO_RANKS[hr], nxt = HERO_RANKS[hr + 1];
@@ -6912,6 +6952,7 @@ function viewWorld() {
     <div class="row"><h2>Die Reiche</h2></div>
     <p class="small">Jedes Reich gehört zu einem Kapitel im Lehrplan und hat sechs Quests. Tippe auf eine Quest, um direkt ihre Schriftrolle zu öffnen.</p>
     ${realmListHtml(per)}
+    ${werkstattHtml()}
     <div class="row"><h2>Sagen von Naturalia</h2><span class="small mono">${nSaga} von ${SAGAS.length}</span></div>
     <p class="small">Sagen erzählen von Taten über alle Reiche hinweg.</p>
     <div class="tgrid">${sagas}</div>
