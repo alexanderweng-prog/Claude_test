@@ -18,6 +18,7 @@
   --c-nut: oklch(0.42 0.08 155);   --c-nut-bg: oklch(0.95 0.02 155);
   --c-sport: oklch(0.50 0.11 45);  --c-sport-bg: oklch(0.95 0.025 45);
   --c-alle: oklch(0.45 0.10 300);  --c-alle-bg: oklch(0.95 0.025 300);
+  --c-sprache: oklch(0.45 0.09 200); --c-sprache-bg: oklch(0.95 0.02 200);
   --f-display: "Fraunces", Georgia, serif;
   --f-body: "Source Sans 3", Helvetica, Arial, sans-serif;
   color-scheme: light;
@@ -32,6 +33,7 @@
     --c-nut: oklch(0.78 0.09 155);   --c-nut-bg: oklch(0.29 0.04 155);
     --c-sport: oklch(0.80 0.10 45);  --c-sport-bg: oklch(0.30 0.04 45);
     --c-alle: oklch(0.80 0.09 300);  --c-alle-bg: oklch(0.30 0.04 300);
+    --c-sprache: oklch(0.80 0.08 200); --c-sprache-bg: oklch(0.30 0.035 200);
     color-scheme: dark;
   }
   :root:not([data-theme="light"]) .logo { filter: invert(1) hue-rotate(180deg); mix-blend-mode: normal; }
@@ -62,6 +64,7 @@ a.card:focus-visible { outline: 3px solid var(--fach); outline-offset: 2px; }
 .nut   { --fach: var(--c-nut);   --fach-bg: var(--c-nut-bg); }
 .sport { --fach: var(--c-sport); --fach-bg: var(--c-sport-bg); }
 .alle  { --fach: var(--c-alle);  --fach-bg: var(--c-alle-bg); }
+.sprache { --fach: var(--c-sprache); --fach-bg: var(--c-sprache-bg); }
 footer { border-top: 1px solid var(--line); padding-top: 14px; color: var(--muted); font-size: 14px; }
 @media (prefers-reduced-motion: reduce) { a.card { transition: none; } a.card:hover { transform: none; } }
 </style>
@@ -77,22 +80,33 @@ footer { border-top: 1px solid var(--line); padding-top: 14px; color: var(--mute
   </header>
 
   <section class="mathe">
-    <h2>Mathematik, Deutsch und Informatik</h2>
+    <h2>Mathematik</h2>
     <div class="grid">
+      <a class="card" href="https://alexanderweng-prog.github.io/Ich_lerne/">
+        <span class="tag">Grundlagen bis 3. Sek</span>
+        <h3>Mastery Mathe</h3>
+        <p>Einstufungstest, dann Schritt für Schritt: Grundlagen, Brüche, Terme, Gleichungen. Neues Thema erst, wenn das alte sitzt.</p>
+      </a>
       <a class="card" href="kanti-site/">
         <span class="tag">Aufnahmeprüfung</span>
         <h3>Kanti-Trainer Mathematik</h3>
         <p>Adaptives Training, Probeprüfung mit Note, Fehlerheft und Lernplan.</p>
       </a>
+      <a class="card" href="flow-trainer/">
+        <span class="tag">Kopfrechnen · Einheiten · Zahlensysteme</span>
+        <h3>Flow-Trainer</h3>
+        <p>Kopfrechnen, Einheiten, Binär- und Hexadezimalzahlen. Passt sich dem Können an.</p>
+      </a>
+    </div>
+  </section>
+
+  <section class="sprache">
+    <h2>Deutsch, Medien und Informatik</h2>
+    <div class="grid">
       <a class="card" href="kanti-deutsch/">
         <span class="tag">Aufnahmeprüfung</span>
         <h3>Kanti-Trainer Deutsch</h3>
         <p>Grammatik, Wortschatz und Leseverstehen in Stufen.</p>
-      </a>
-      <a class="card" href="flow-trainer/">
-        <span class="tag">Mathematik · Informatik</span>
-        <h3>Flow-Trainer</h3>
-        <p>Kopfrechnen, Einheiten, Binär- und Hexadezimalzahlen. Passt sich dem Können an.</p>
       </a>
       <a class="card" href="grammatik-trainer/">
         <span class="tag">Deutsch als Zweitsprache · A1–A2</span>

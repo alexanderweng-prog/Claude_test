@@ -18,6 +18,8 @@
 | `sporttheorie/` | Sporttheorie | Repo sporttheorie |
 | `ruhepol/` | Ruhepol | Repo Atementspannung |
 
+**Mastery Mathe** (Repo Ich_lerne) liegt ebenfalls nicht hier: Die App wird bei jedem Push gebaut und unter https://alexanderweng-prog.github.io/Ich_lerne/ veröffentlicht. Die Kachel verlinkt dorthin.
+
 Die **Lernwerkstatt** (Repo Container) liegt nicht hier, sondern läuft bei Vercel (https://lernwerkstatt-pi.vercel.app/), weil sie für die KI einen Server braucht. Die Kachel verlinkt dorthin.
 
 `kanti-trainer/` ist eine ältere Version des Kanti-Trainers und wird nicht verlinkt.
