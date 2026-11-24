@@ -1,0 +1,11 @@
+{
+  "name": "wortland",
+  "private": true,
+  "type": "module",
+  "description": "Wortland – Grammatik-Abenteuer DaZ, mit KI-Korrektur (Vercel-Funktion in api/)",
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.14.0",
+    "zod": "4.1.12"
+  },
+  "engines": { "node": ">=20" }
+}
