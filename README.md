@@ -5,7 +5,7 @@
 | Ordner | App | Quelle |
 |---|---|---|
 | `kanti-site/` | Kanti-Trainer Mathematik | dieses Repo |
-| `kanti-deutsch/` | Kanti-Trainer Deutsch | Repo Kanti-Trainer_Deutsch |
+| `kanti-deutsch/` | Kanti-Trainer Deutsch, mit KI-Textkorrektur (Einrichtung: `kanti-deutsch/README.md`) | Repo Kanti-Trainer_Deutsch, hier erweitert |
 | `flow-trainer/` | Flow-Trainer | dieses Repo |
 | `grammatik-trainer/` | Wortland – Grammatik-Abenteuer DaZ | Repo Grammatik-Trainer |
 | `perfektes-lernen/` | Lern-Motor (Schüler-App unter `app/`, Lehrer-Dashboard unter `app/lehrer.html`) | Repo Perfektes_lernen |
