@@ -12,6 +12,8 @@
   let speicherTimer = null;
 
   const klon = (o) => JSON.parse(JSON.stringify(o));
+  const SPIEL_IDS = ["flug", "faenger", "jagd", "stadt"];
+  const SPIEL_NAMEN = { flug: "🚀 Globi-Flug (Geschicklichkeit)", faenger: "⭐ Bewertungs-Fänger (Geschicklichkeit)", jagd: "🦠 Viren-Jagd (Reaktion)", stadt: "🏗️ Globis Stadt (ruhig, ohne Zeitdruck)" };
   const neueId = () => "k" + Math.random().toString(36).slice(2, 8);
 
   function normalisieren(m) {
@@ -21,6 +23,8 @@
     m.kapitel = Array.isArray(m.kapitel) ? m.kapitel : [];
     m.kapitel.forEach(k => { k.id = k.id || neueId(); k.karten = Array.isArray(k.karten) ? k.karten : []; });
     m.uebungen = Array.isArray(m.uebungen) ? m.uebungen : [];
+    m.spiel = Object.assign({ fragenProRunde: 3, sekunden: 30 }, m.spiel || {});
+    if (!Array.isArray(m.spiel.spiele)) m.spiel.spiele = SPIEL_IDS.slice();
     if (m.probetest) m.probetest.fragen = Array.isArray(m.probetest.fragen) ? m.probetest.fragen : [];
     return m;
   }
@@ -302,7 +306,25 @@
               knopf("Bild entfernen", () => { mk.bild = ""; bildPfad.querySelector("input").value = ""; zeigeVorschau(); geaendert(); })))),
         feld("Begrüssung", mk, "begruessung", { typ: "textarea", zeilen: 2 }),
         zeilenFeld("Lob (ein Spruch pro Zeile)", mk, "lob", "Zufällig bei richtigen Antworten."),
-        zeilenFeld("Trost (ein Spruch pro Zeile)", mk, "trost", "Zufällig bei falschen Antworten."))
+        zeilenFeld("Trost (ein Spruch pro Zeile)", mk, "trost", "Zufällig bei falschen Antworten.")),
+      h("section", { class: "card stack" },
+        h("h2", {}, "Lernspiele"),
+        h("p", { class: "muted" }, "Die Spiele nutzen die Übungsfragen (ohne offene Fragen). Für jede Spielrunde müssen zuerst Fragen richtig beantwortet werden."),
+        h("div", { class: "ed-zwei" },
+          feld("Richtige Antworten pro Spielrunde", M.spiel, "fragenProRunde", { typ: "number", min: 1, step: 1, hilfe: "Empfohlen: 3 bis 5" }),
+          feld("Rundendauer in Sekunden", M.spiel, "sekunden", { typ: "number", min: 10, step: 5, hilfe: "10 bis 120 Sekunden (gilt nicht für Globis Stadt)" })),
+        h("fieldset", { class: "ed-spiele" },
+          h("legend", {}, "Diese Spiele stehen zur Auswahl"),
+          SPIEL_IDS.map(id => {
+            const cb = h("input", { type: "checkbox", id: "ed-spiel-" + id });
+            cb.checked = M.spiel.spiele.includes(id);
+            cb.addEventListener("change", () => {
+              M.spiel.spiele = SPIEL_IDS.filter(x => x === id ? cb.checked : M.spiel.spiele.includes(x));
+              geaendert();
+            });
+            return h("label", { class: "ed-check", for: "ed-spiel-" + id }, cb, " ", SPIEL_NAMEN[id]);
+          }),
+          h("small", { class: "muted" }, "Ist nur ein Spiel gewählt, startet es direkt ohne Auswahl.")))
     ];
   }
 
@@ -537,5 +559,5 @@ window.LERNINHALT = ${JSON.stringify(sauber(), null, 2)};
     window.scrollTo(0, scrollY);
   }
 
-  window.LernEditor = { oeffnen, version: "4" };
+  window.LernEditor = { oeffnen, version: "6" };
 })();

@@ -12,6 +12,15 @@ Funktionen:
 - **Theorie lernen**: Lernkarten pro Kapitel, jeweils mit Merksatz. Die App merkt sich, welche Karten gelernt sind.
 - **Üben**: Fragen pro Kapitel oder gemischt, mit sofortiger Rückmeldung und Erklärung.
 - **Probetest**: wie der echte Test, mit Timer, Selbstbewertung der offenen Fragen und Note nach dem Notenschlüssel.
+- **Lernen & Spielen**: Jede richtige Antwort lädt Energie. Ist sie voll (Standard: 3 richtige Antworten), gibt es eine Spielrunde.
+  Falsch beantwortete Fragen kommen kurz danach nochmals. Offene Fragen sind ausgeschlossen, weil sie sich selbst bewerten lassen.
+  Zu Beginn wählen die Schüler/innen eines von vier Spielen:
+  - 🚀 **Globi-Flug** (Geschicklichkeit): gedrückt halten = steigen, Pakete sammeln, Viren ausweichen
+  - ⭐ **Bewertungs-Fänger** (Geschicklichkeit): echte Bewertungen (Sterne) fangen, «FAKE» meiden; Maus/Finger oder ← →
+  - 🦠 **Viren-Jagd** (Reaktion): Viren auf den Bildschirmen antippen, Datenpakete nicht; Tastatur 1–9 möglich
+  - 🏗️ **Globis Stadt** (ruhig, ohne Zeitdruck): jede richtige Antwort = 1 Münze, damit Gebäude bauen; die Stadt bleibt gespeichert
+
+  Im Editor unter «Allgemein» stellst du ein: Antworten pro Runde, Rundendauer und welche Spiele zur Auswahl stehen.
 
 Der Lernfortschritt wird nur im Browser des jeweiligen Geräts gespeichert.
 
@@ -49,6 +58,7 @@ Mit «Standardmaterial wiederherstellen» wird wieder `inhalt/thema.js` verwende
 ```
 titel, fach, stufe
 maskottchen: name, bild, begruessung, lob[], trost[]
+spiel:      fragenProRunde, sekunden, spiele[]   (optional; Standard 3, 30, alle Spiele)
 kapitel[]:  id, titel, icon, karten[]: { titel, text, merksatz }
 uebungen[]: { kapitel: <id>, typ, frage, ... , erklaerung }
 probetest:  titel, minuten, hinweis, notenschluessel[], fragen[]
