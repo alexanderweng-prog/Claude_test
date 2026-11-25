@@ -18,7 +18,7 @@
 | `sporttheorie/` | Sporttheorie | Repo sporttheorie |
 | `ruhepol/` | Ruhepol | Repo Atementspannung |
 
-**Internet, Bewertungen und KI** (MuI mit Globi, Repo Klasse-Wartmann) liegt nicht hier, sondern ist unter https://alexanderweng-prog.github.io/Klasse-Wartmann/ veröffentlicht. Die Kachel verlinkt dorthin.
+**Internet, Bewertungen und KI** (MuI mit Globi, Repo Klasse-Wartmann) liegt nicht hier, sondern ist unter https://alexanderweng-prog.github.io/Klasse-Wartmann/ veröffentlicht. Die Kachel verlinkt dorthin. Unter der alten Adresse `mui-internet-ki/` liegt nur noch eine Weiterleitung dorthin.
 
 **Mastery Mathe** (Repo Ich_lerne) liegt ebenfalls nicht hier: Die App wird bei jedem Push gebaut und unter https://alexanderweng-prog.github.io/Ich_lerne/ veröffentlicht. Die Kachel verlinkt dorthin.
 
