@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 // Tests für den Lern-Motor. Aufruf: node --test test/
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -218,8 +219,12 @@ test('Prüfstatus: nur geprüfte Aufgaben kommen in Umlauf', () => {
   }
 });
 
+// Alle Kapitel haben Ergänzungen. Ein neu importiertes Kapitel ohne Ergänzung lässt diesen Test scheitern, bis sie geschrieben ist.
+const MIT_ERGAENZUNG = KATALOG.filter(k => existsSync(new URL(`../pakete/ergaenzungen/${k.id}.js`, import.meta.url)));
+
 test('Ergänzungen: alle MC-Optionen erklärt, jedes Lernziel mit mind. 2 Varianten, Format gültig', async () => {
-  for (const k of KATALOG) {
+  assert.equal(MIT_ERGAENZUNG.length, KATALOG.length, 'Kapitel ohne Ergänzung: ' + KATALOG.filter(k => !MIT_ERGAENZUNG.includes(k)).map(k => k.id).join(', '));
+  for (const k of MIT_ERGAENZUNG) {
     const roh = (await import('../pakete/' + k.id + '.js')).default;
     const p = ergaenze(roh, await ladeErgaenzung(k.id), { alleFreigeben: true });
     assert.deepEqual(pruefePaket(p, { durchlaeufe: 15 }), [], k.id);
@@ -267,4 +272,25 @@ test('Simulationen: nur im Zusatzblock, nie im Wiederholungsblock', async () => 
   // Simulationsantworten verändern den Wiederholungsplan nicht
   const vorher = JSON.stringify(m.lernziele[sims[0].schritt.lernziel].karte);
   assert.equal(JSON.stringify(zusatz.modell.lernziele[sims[0].schritt.lernziel].karte), vorher);
+});
+
+test('Naturalia: alle «Kurz testen»-Fragen übernommen', async () => {
+  for (const k of KATALOG) {
+    const p = (await import('../pakete/' + k.id + '.js')).default;
+    const kt = p.aufgaben.filter(a => a.thema === 'Kurz testen');
+    assert.equal(kt.length, p.kompetenzen.length, k.id);
+    assert.ok(Object.keys(p.simulationen).length > 0, k.id + ': keine Simulationen');
+    kt.forEach(a => assert.ok(p.lernziele.some(l => l.id === a.lernziel), a.id));
+  }
+});
+
+test('Simulationen: zu jeder Simulation gibt es eine Frage', async () => {
+  for (const k of KATALOG) {
+    const roh = (await import('../pakete/' + k.id + '.js')).default;
+    const p = ergaenze(roh, await ladeErgaenzung(k.id), { alleFreigeben: true });
+    const zugeordnet = new Set(p.lernziele.flatMap(l => (l.simulationen || []).map(s => s.id)));
+    const mitFrage = new Set(p.aufgaben.filter(a => a.simulation).map(a => a.simulation));
+    const fehlen = [...zugeordnet].filter(id => !mitFrage.has(id));
+    assert.deepEqual(fehlen, [], k.id + ': Simulationen ohne Frage');
+  }
 });

@@ -27,10 +27,18 @@ Auf GitHub Pages: Repository-Wurzel veröffentlichen, die App liegt unter `/app/
 - Nur behandelte Teile freigeben: `app/?paket=leistung&freigabe=s1,s2` (Stationen-IDs). Den Link kann die Lehrperson der Klasse geben.
 - Demo aller Aufgabenformate: `app/?paket=demo-formate`
 
-## Naturalia-Inhalte neu übernehmen
+## Vorlesen
+
+Bei jeder Lernkarte und jeder Aufgabe gibt es einen Knopf «Vorlesen». Für die Lernkarten der 20 Kapitel aus der Lernlandkarte gibt es aufgenommene Sprechtexte (`audio/<kapitel>/<Station>-c<Karte>-w.mp3`, 484 Dateien, rund 100 MB). Alles andere liest die Browser-Stimme (deutsch) vor, mit den Aussprache-Regeln der Lernlandkarte (Einheiten, Formeln, Hochzahlen). Code: `app/vorlesen.js`.
+
+## Inhalte neu übernehmen
+
+Welches Kapitel woher kommt, steht in `werkzeuge/kapitel.mjs`.
 
 ```
 node werkzeuge/naturalia-import.mjs ../Claude_test/fantasy-lernapp
+node werkzeuge/lernlandkarte-import.mjs ../Claude_test/nut-lernlandkarte
+cp -r ../Claude_test/nut-lernlandkarte/audio ./   # Sprechtexte
 npm test
 ```
 
@@ -49,11 +57,20 @@ npm test
 
 Alle Zahlen sind Annahmen und im Pilot anzupassen.
 
+## Inhalte
+
+22 Kapitel: NaTech 7 (Kapitel 1–7), NaTech 8 (1–5), NaTech 9 (1–8) und die Vertiefungen Leistung und Motor.
+
+- 20 Kapitel aus der NuT-Lernlandkarte (alle Lehrmittel-Kapitel), Leistung und Motor aus Naturalia.
+- 810 Aufgabenvorlagen der Quests, 132 «Kurz testen»-Fragen aus den Lernkarten (eine pro Quest), 515 Lernziele, 145 Simulationen
+- Lernkarten ohne eigene Aufgaben (Sicherheit, weitere Beispiele) erscheinen im Schritt «Beispiel» beim nächstliegenden Lernziel.
+- Nicht übernommen: die Selbsteinschätzung der Lernlandkarte zu den Lehrplan-21-Kompetenzen, Spielmodi (Challenge, Sanduhr), Lob-Töne.
+
 ## Ergänzte Inhalte
 
-- 660 Erklärungen zu falschen Antwortoptionen (alle 220 Multiple-Choice-Aufgaben aus Naturalia).
-- 138 neue Aufgabenvarianten, sodass jedes der 201 Lernziele mindestens zwei Variantengruppen hat (Multiple Choice, Zahl mit Zufallswerten, Zuordnen, Lückentext, Reihenfolge).
-- 56 Fragen zu den Naturalia-Simulationen («Simulation mit Frage», nur im freiwilligen Zusatzblock).
+- Erklärungen zu jeder falschen Antwortoption aller Multiple-Choice-Aufgaben: 822 in den 9 Naturalia-Kapiteln, 1443 in den 13 Kapiteln aus der Lernlandkarte.
+- 251 neue Aufgabenvarianten (138 + 113), sodass jedes der 515 Lernziele mindestens zwei Variantengruppen hat (Multiple Choice, Zahl mit Zufallswerten, Zuordnen, Lückentext, Reihenfolge).
+- Zu jeder Simulation eine Frage («Simulation mit Frage», nur im freiwilligen Zusatzblock): 56 in `ergaenzungen/simulationen.js`, 89 in `ergaenzungen/simulationen-lernlandkarte.js`.
 - Alles ist Entwurf, bis eine Lehrperson es im Dashboard unter «Neue Inhalte prüfen» freigibt.
 
 ## Simulationen

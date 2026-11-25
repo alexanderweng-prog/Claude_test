@@ -50,10 +50,13 @@ export function ergaenze(paket, erg, { freigaben = {}, alleFreigeben = false } =
 
 
 export async function ladeErgaenzung(paketId) {
-  if (!KATALOG.some(k => k.id === paketId)) return null;
-  let erg = null, sim = [];
-  try { erg = (await import(`./ergaenzungen/${paketId}.js`)).default; } catch (e) { /* keine Ergänzung */ }
+  const eintrag = KATALOG.find(k => k.id === paketId);
+  if (!eintrag) return null;
+  let erg = null, sim = [], kt = {};
+  if (eintrag.ergaenzung) try { erg = (await import(`./ergaenzungen/${paketId}.js`)).default; } catch (e) { /* keine Ergänzung */ }
   try { sim = (await import('./ergaenzungen/simulationen.js')).default[paketId] || []; } catch (e) { /* keine Simulationsfragen */ }
-  if (!erg && !sim.length) return null;
-  return { erklaerungen: (erg && erg.erklaerungen) || {}, aufgaben: [...((erg && erg.aufgaben) || []), ...sim] };
+  try { sim = sim.concat((await import('./ergaenzungen/simulationen-lernlandkarte.js')).default[paketId] || []); } catch (e) { /* keine */ }
+  try { kt = (await import('./ergaenzungen/kurztests.js')).default[paketId] || {}; } catch (e) { /* keine Erklärungen zu «Kurz testen» */ }
+  if (!erg && !sim.length && !Object.keys(kt).length) return null;
+  return { erklaerungen: { ...((erg && erg.erklaerungen) || {}), ...kt }, aufgaben: [...((erg && erg.aufgaben) || []), ...sim] };
 }
