@@ -9,7 +9,6 @@
 | `flow-trainer/` | Flow-Trainer | dieses Repo |
 | `grammatik-trainer/` | Wortland – Grammatik-Abenteuer DaZ | Repo Grammatik-Trainer |
 | `perfektes-lernen/` | Lern-Motor (Schüler-App unter `app/`, Lehrer-Dashboard unter `app/lehrer.html`) | Repo Perfektes_lernen |
-| `mui-internet-ki/` | Internet, Bewertungen und KI (MuI, Globi) | Repo Klasse-Wartmann |
 | `nut-lernlandkarte/` | NuT Lernlandkarte | Repo NuT-Gaming |
 | – | Naturalia – alle Reiche | eigenes Repo [Naturalia](https://github.com/alexanderweng-prog/Naturalia), verlinkt auf https://alexanderweng-prog.github.io/Naturalia/ |
 | `leistung/` | Leistung | Repo Leistungsaudio |
@@ -18,6 +17,8 @@
 | `sexualkunde/` | Pubertät & Zyklus | Repo Sexualkunde |
 | `sporttheorie/` | Sporttheorie | Repo sporttheorie |
 | `ruhepol/` | Ruhepol | Repo Atementspannung |
+
+**Internet, Bewertungen und KI** (MuI mit Globi, Repo Klasse-Wartmann) liegt nicht hier, sondern ist unter https://alexanderweng-prog.github.io/Klasse-Wartmann/ veröffentlicht. Die Kachel verlinkt dorthin.
 
 **Mastery Mathe** (Repo Ich_lerne) liegt ebenfalls nicht hier: Die App wird bei jedem Push gebaut und unter https://alexanderweng-prog.github.io/Ich_lerne/ veröffentlicht. Die Kachel verlinkt dorthin.
 
