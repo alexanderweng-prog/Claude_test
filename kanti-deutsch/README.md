@@ -13,6 +13,8 @@
 
 ## KI einrichten (einmalig, ca. 10 Minuten)
 
+**Stand:** Eingerichtet als Vercel-Projekt `kanti-deutsch` (Team Sekundarschule Halingen), Adresse https://kanti-deutsch.vercel.app/. `KLASSEN_CODE` und `LIMIT_PRO_STUNDE` (400) sind gesetzt. Produktion wurde vom Branch `claude/kanti-deutsch-ki-korrektur-iyp5dc` deployt; der Produktions-Branch des Projekts ist `naturalia-lernwelt`.
+
 Die App ist reines HTML. Für die KI braucht es eine kleine Server-Funktion (`api/korrektur.js`), damit der API-Schlüssel nicht im Browser der Lernenden liegt. Gedacht ist Vercel (Gratis-Konto reicht):
 
 1. Bei console.anthropic.com Guthaben laden und einen API-Schlüssel erstellen.
