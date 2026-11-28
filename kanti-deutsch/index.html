@@ -1816,7 +1816,7 @@ function viewReadList() {
 }
 
 function viewReader(rid) {
-  const r = READ.find(x => x.id === rid); const A = {}; let done = false, finished = false; const self = {};
+  const r = READ.find(x => x.id === rid); const A = {}; let done = false, finished = false, confirmed = false; const self = {}; const ki = { pts: {}, pending: false };
   const seg = (name, labels, vals) => `<div class="segb" role="group">${labels.map((l, k) => `<button data-n="${name}" data-v="${vals[k]}">${l}</button>`).join('')}</div>`;
   const qHtml = (q, qi) => {
     let inner = '';
@@ -1869,8 +1869,14 @@ function viewReader(rid) {
       (q.k === 'mc' ? [{ a: q.a }] : q.st).forEach((s, si) => { if (String(A[qi + '-' + si]) === String(s.a)) auto += val; });
     });
     const rated = Object.keys(self).length, sum = auto + slf, mx = maxPts(r);
-    $app.querySelector('#tot').innerHTML = `<b>${fmt(sum)} / ${fmt(mx)}</b> &nbsp;${rated < open ? `Bewerte noch ${open - rated} offene Antwort${open - rated > 1 ? 'en' : ''} selbst.` : 'Fertig bewertet.'}`;
-    if (rated === open && !finished) {
+    const tot = $app.querySelector('#tot'), bar = $app.querySelector('#totbar');
+    const waiting = ki.pending && rated < open;
+    tot.innerHTML = `<b>${fmt(sum)} / ${fmt(mx)}</b> &nbsp;${waiting ? 'Die KI bewertet deine offenen Antworten …' : rated < open ? `Bewerte noch ${open - rated} offene Antwort${open - rated > 1 ? 'en' : ''}.` : finished ? 'Fertig bewertet.' : 'Prüfe die Punkte und bestätige.'}`;
+    let cb = bar.querySelector('#confirm');
+    if (open && rated === open && !finished && !confirmed && !ki.pending) {
+      if (!cb) { cb = h('<button class="btn btn-primary" id="confirm">Punkte bestätigen</button>'); bar.append(cb); cb.onclick = () => { confirmed = true; cb.remove(); total(); }; }
+    } else if (cb) cb.remove();
+    if (rated === open && !finished && (confirmed || !open)) {
       finished = true;
       const prev = S.rd[r.id] ? S.rd[r.id].best : 0, gain = Math.max(0, Math.round((sum - prev) * 4)), lvB = levelOf(S.xp);
       if (sum > prev || !S.rd[r.id]) S.rd[r.id] = { best: Math.max(sum, prev), d: Date.now() };
@@ -1880,12 +1886,14 @@ function viewReader(rid) {
       res.innerHTML = `<section class="card summary" style="margin-top:16px;position:relative;overflow:hidden" id="rcard">
         <div class="tag">${esc(r.title)}</div><h2 class="sumh" style="margin:8px 0">${sum >= .9 * mx ? 'Genau gelesen.' : sum >= .7 * mx ? 'Gut gemacht.' : 'Lies die Musterlösungen genau durch.'}</h2>
         <p class="lead2"><span class="mono b">${fmt(sum)} von ${fmt(mx)}</span> Punkten.</p>
+        ${(() => { const ch = Object.keys(ki.pts).filter(qi => self[qi] !== ki.pts[qi]); return ch.length ? `<p class="small" style="margin-bottom:8px">Bei ${ch.length === 1 ? 'einer Antwort' : ch.length + ' Antworten'} hast du die KI-Bewertung geändert (KI: ${ch.map(qi => ki.pts[qi]).join(', ')} · du: ${ch.map(qi => self[qi]).join(', ')}). Besprich das mit deiner Lehrperson, wenn du unsicher bist.</p>` : ''; })()}
         <div class="gain"><span class="mono b">+${gain} XP</span><span class="small">${prev && gain === 0 ? 'XP gibt es nur, wenn du deinen Bestwert verbesserst.' : '4 XP pro neuem Punkt'}</span></div>
         ${lvA > lvB ? `<div class="fb good"><div class="fbt">Neue Stufe: ${LEVELS[lvA].name}</div></div>` : ''}
         ${neu.length ? `<div class="fb good"><div class="fbt">${neu.length === 1 ? 'Neuer Pokal!' : neu.length + ' neue Pokale!'}</div><div class="trophies">${neu.map(t => trophyCard(t, true)).join('')}</div></div>` : ''}
         <button class="btn block" id="rback">Zu den Texten</button></section>`;
       res.querySelector('#rback').onclick = () => go('read');
       if (gain || neu.length) setTimeout(() => confetti(res.querySelector('#rcard')), 200);
+      tot.innerHTML = `<b>${fmt(sum)} / ${fmt(mx)}</b> &nbsp;Fertig bewertet.`;
     }
   };
   $app.querySelector('#eval').onclick = ev => {
@@ -1912,16 +1920,18 @@ function viewReader(rid) {
       });
     });
     total();
-    kiLesen(r, self, total, () => finished);
+    kiLesen(r, self, total, () => finished, ki);
   };
 }
 
 // Offene Antworten im Leseverstehen von der KI bewerten lassen. Ohne KI bleibt die Selbstbewertung.
-async function kiLesen(r, self, total, isFinished) {
+async function kiLesen(r, self, total, isFinished, ki) {
   const open = r.qs.map((q, qi) => ({ q, qi })).filter(x => x.q.k === 'open');
   if (!open.length) return;
+  ki.pending = true; total();
   const st = await kiStatus(false);
   if (st.aus || (st.codeNoetig && !lsGet(CKEY))) {
+    ki.pending = false; total();
     const msg = st.aus ? '' : 'Für die KI-Bewertung braucht es den Klassencode (Bereich «Schreiben»). ';
     open.forEach(({ qi }) => $app.querySelector('#m-' + qi)?.insertAdjacentHTML('beforeend', `<p class="small" style="margin-top:8px">${msg}Vergleiche mit der Musterlösung und bewerte dich selbst.</p>`));
     return;
@@ -1943,13 +1953,16 @@ async function kiLesen(r, self, total, isFinished) {
         <div class="fbb">${esc(b.begruendung)}</div>
         <ul class="check" style="color:var(--text)">${(b.kriterien || []).map(k => `<li>${k.erfuellt ? '✓' : '✗'} ${esc(k.kriterium)}</li>`).join('')}</ul>
         ${b.tipp ? `<div class="fbb" style="margin-top:6px"><b>Tipp:</b> ${esc(b.tipp)}</div>` : ''}
-        <div class="small" style="margin-top:6px">Die KI kann sich irren. Bist du anderer Meinung, frag deine Lehrperson.</div>`;
+        <div class="small" style="margin-top:6px">Die KI kann sich irren. Bist du anderer Meinung, wähle oben deine Punkte, bevor du bestätigst.</div>`;
+      ki.pts[qi] = b.punkte;
       if (isFinished() || self[qi] != null) return;
       self[qi] = b.punkte;
       $app.querySelectorAll(`#m-${qi} [data-s]`).forEach(o => o.classList.toggle('sel', +o.dataset.s === b.punkte));
     });
+    ki.pending = false;
     if (!isFinished()) total();
   } catch (e) {
+    ki.pending = false; if (!isFinished()) total();
     boxes.forEach(b => { b.className = 'fb bad'; b.innerHTML = `<div class="fbb">${esc(e.message || 'Keine Verbindung zur KI.')} Bewerte dich selbst mit der Musterlösung.</div>`; });
   }
 }
