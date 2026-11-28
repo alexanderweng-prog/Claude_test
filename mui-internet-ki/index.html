@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lernapp</title>
+  <link rel="stylesheet" href="style.css?v=6">
+</head>
+<body>
+  <header class="topbar">
+    <button class="brand" id="home-btn" type="button" aria-label="Zur Startseite">
+      <span class="brand-fach" id="brand-fach">Medien und Informatik</span>
+      <span class="brand-titel" id="brand-titel">Lernapp</span>
+    </button>
+    <button class="btn btn-ghost" id="lp-btn" type="button">Lehrperson</button>
+  </header>
+
+  <main id="app" tabindex="-1"></main>
+
+  <dialog id="lp-dialog">
+    <form method="dialog" class="lp-form">
+      <h2>Bereich Lehrperson</h2>
+      <p class="muted" id="lp-quelle"></p>
+
+      <h3>Material bearbeiten</h3>
+      <p>Im Editor erfasst du Theorie, Übungen und Probetest in Formularfeldern. Du musst kein JSON schreiben.</p>
+      <button class="btn btn-primary" type="button" id="lp-editor">Editor öffnen</button>
+
+      <h3 style="margin-top:20px">Material austauschen</h3>
+      <p>Lade eine <code>.json</code>- oder <code>.js</code>-Datei im Format von <code>inhalt/thema.js</code>.
+        Das Material wird in diesem Browser gespeichert und ersetzt das Standardmaterial, bis du zurücksetzt.</p>
+      <label class="btn btn-primary file-btn">
+        Material laden …
+        <input type="file" id="lp-datei" accept=".json,.js,application/json,text/javascript" hidden>
+      </label>
+      <p class="lp-meldung" id="lp-meldung" role="status"></p>
+
+      <div class="lp-row">
+        <button class="btn" type="button" id="lp-export">Aktuelles Material als Vorlage herunterladen</button>
+        <button class="btn" type="button" id="lp-standard">Standardmaterial wiederherstellen</button>
+        <button class="btn" type="button" id="lp-fortschritt">Lernfortschritt löschen</button>
+      </div>
+
+      <div class="lp-row end">
+        <button class="btn btn-primary" value="close">Schliessen</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="inhalt/thema.js?v=6"></script>
+  <script src="gemeinsam.js?v=6"></script>
+  <script src="editor.js?v=6"></script>
+  <script src="spiel.js?v=6"></script>
+  <script src="app.js?v=6"></script>
+  <script>
+    // Prüft, ob alle Programmdateien zur gleichen Version gehören
+    (function () {
+      var v = "6";
+      var ok = window.Lernapp && window.Lernapp.version === v &&
+               window.LernEditor && window.LernEditor.version === v &&
+               window.LernSpiel && window.LernSpiel.version === v &&
+               window.LernappVersion === v;
+      if (ok) return;
+      var d = document.createElement("div");
+      d.className = "hinweis-box versions-hinweis";
+      d.setAttribute("role", "alert");
+      d.textContent = "Achtung: Die Dateien der App passen nicht zusammen (alte Version im Zwischenspeicher oder Datei fehlt). " +
+        "Bitte die Seite neu laden (Mac: Cmd + Shift + R, Windows: Ctrl + F5). Hilft das nicht, alle Dateien neu herunterladen.";
+      document.body.insertBefore(d, document.body.firstChild);
+    })();
+  </script>
+</body>
+</html>

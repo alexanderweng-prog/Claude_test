@@ -1,0 +1,9 @@
+{
+  "name": "kanti-trainer-deutsch",
+  "private": true,
+  "type": "module",
+  "description": "Kanti-Trainer Deutsch mit KI-Textkorrektur (Vercel)",
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.14.0"
+  }
+}
