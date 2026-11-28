@@ -1799,7 +1799,7 @@ function maxPts(r) { return r.qs.reduce((s, q) => s + qMax(q), 0); }
 function viewReadList() {
   mount(`
     <div class="row"><h2>Leseverstehen</h2><span class="small">ca. 15 Minuten pro Text</span></div>
-    <p class="small" style="margin-bottom:12px">Literarische Texte mit Zeilennummern und Fragen wie in der Prüfung: richtig / falsch / kein Hinweis, Pronomen-Bezüge, Wortbedeutung und offene Fragen. Pro erreichtem Punkt gibt es 4 XP.</p>
+    <p class="small" style="margin-bottom:12px">Literarische Texte mit Zeilennummern und Fragen wie in der Prüfung: richtig / falsch / kein Hinweis, Pronomen-Bezüge, Wortbedeutung und offene Fragen. Offene Antworten bewertet die KI, wenn sie eingerichtet ist. Pro erreichtem Punkt gibt es 4 XP.</p>
     <div class="path">${READ.map((r, k) => { const b = S.rd[r.id], mx = maxPts(r); const st = b ? (b.best >= .9 * mx ? 3 : b.best >= .75 * mx ? 2 : b.best >= .5 * mx ? 1 : 0) : 0; return `
       <article class="card st" style="--i:${k}">
         <div class="num mono" aria-hidden="true">${k + 1}</div>
@@ -1912,7 +1912,46 @@ function viewReader(rid) {
       });
     });
     total();
+    kiLesen(r, self, total, () => finished);
   };
+}
+
+// Offene Antworten im Leseverstehen von der KI bewerten lassen. Ohne KI bleibt die Selbstbewertung.
+async function kiLesen(r, self, total, isFinished) {
+  const open = r.qs.map((q, qi) => ({ q, qi })).filter(x => x.q.k === 'open');
+  if (!open.length) return;
+  const st = await kiStatus(false);
+  if (st.aus || (st.codeNoetig && !lsGet(CKEY))) {
+    const msg = st.aus ? '' : 'Für die KI-Bewertung braucht es den Klassencode (Bereich «Schreiben»). ';
+    open.forEach(({ qi }) => $app.querySelector('#m-' + qi)?.insertAdjacentHTML('beforeend', `<p class="small" style="margin-top:8px">${msg}Vergleiche mit der Musterlösung und bewerte dich selbst.</p>`));
+    return;
+  }
+  const boxes = open.map(({ qi }) => { const m = $app.querySelector('#m-' + qi); const b = h('<div class="fb warn" role="status" style="margin-top:12px"><div class="wait"><span class="spin" aria-hidden="true"></span><span>Die KI bewertet deine Antwort …</span></div></div>'); m.append(b); return b; });
+  const answers = open.map(({ qi }) => $app.querySelector('#ta-' + qi).value.trim());
+  try {
+    const body = { art: 'lesen', titel: r.title, lesetext: r.lines.map((l, k) => `${k + 1}  ${l}`).join('\n'),
+      fragen: open.map(({ q }, i) => ({ frage: q.q.replace(/<[^>]+>/g, ''), punkte: q.p, muster: q.model, kriterien: q.crit, antwort: answers[i] })) };
+    const res = await fetch(kiUrl(), { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Klassencode': lsGet(CKEY) || '' }, body: JSON.stringify(body) });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !Array.isArray(j.bewertungen)) throw new Error(typeof j.fehler === 'string' ? j.fehler : 'Die KI-Bewertung hat nicht geklappt.');
+    open.forEach(({ q, qi }, i) => {
+      const b = j.bewertungen[i], box = boxes[i];
+      if (!b || b.fehlt) { box.className = 'fb bad'; box.innerHTML = '<div class="fbb">Die KI hat diese Antwort nicht bewertet. Bewerte dich selbst.</div>'; return; }
+      const ok = b.punkte === q.p ? 'good' : b.punkte > 0 ? 'warn' : 'bad';
+      box.className = 'fb ' + ok;
+      box.innerHTML = `<div class="fbt"><span>KI-Bewertung: ${b.punkte} von ${q.p} ${q.p === 1 ? 'Punkt' : 'Punkten'}</span></div>
+        <div class="fbb">${esc(b.begruendung)}</div>
+        <ul class="check" style="color:var(--text)">${(b.kriterien || []).map(k => `<li>${k.erfuellt ? '✓' : '✗'} ${esc(k.kriterium)}</li>`).join('')}</ul>
+        ${b.tipp ? `<div class="fbb" style="margin-top:6px"><b>Tipp:</b> ${esc(b.tipp)}</div>` : ''}
+        <div class="small" style="margin-top:6px">Die KI kann sich irren. Bist du anderer Meinung, frag deine Lehrperson.</div>`;
+      if (isFinished() || self[qi] != null) return;
+      self[qi] = b.punkte;
+      $app.querySelectorAll(`#m-${qi} [data-s]`).forEach(o => o.classList.toggle('sel', +o.dataset.s === b.punkte));
+    });
+    if (!isFinished()) total();
+  } catch (e) {
+    boxes.forEach(b => { b.className = 'fb bad'; b.innerHTML = `<div class="fbb">${esc(e.message || 'Keine Verbindung zur KI.')} Bewerte dich selbst mit der Musterlösung.</div>`; });
+  }
 }
 
 // ---------- Schreiben mit KI-Korrektur ----------
