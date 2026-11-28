@@ -6,7 +6,7 @@
 //   ANTHROPIC_API_KEY   Pflicht. Schlüssel aus console.anthropic.com
 //   KLASSEN_CODE        Empfohlen. Code, den die Lernenden einmal eingeben. Leer = alle mit der Adresse.
 //   LIMIT_PRO_STUNDE    Korrekturen pro IP-Adresse und Stunde (Standard 40).
-//   KI_MODELL           Standard claude-opus-5-5
+//   KI_MODELL           Standard claude-haiku-5-5 (günstig). Alternativen: claude-sonnet-5-5, claude-opus-5-5
 //   ERLAUBTE_HERKUNFT   Für Aufrufe von einer anderen Adresse (z. B. GitHub Pages), etwa
 //                       https://alexanderweng-prog.github.io  – mehrere mit Komma trennen. Leer = nur gleiche Adresse.
 
@@ -128,15 +128,18 @@ export default async function handler(req, res) {
 
   const client = new Anthropic();
   try {
-    const antwort = await client.beta.messages.create({
-      model: process.env.KI_MODELL || 'claude-opus-5-5',
+    const modell = process.env.KI_MODELL || 'claude-haiku-5-5';
+    const anfrage = {
+      model: modell,
       max_tokens: 16000,
       system: SYSTEM,
       messages: [{ role: 'user', content: nachricht }],
-      output_config: { effort: 'medium', format: { type: 'json_schema', schema: SCHEMA } },
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default'
-    });
+      output_config: { effort: 'medium', format: { type: 'json_schema', schema: SCHEMA } }
+    };
+    // Haiku hat keine serverseitige Ausweichlösung bei Ablehnungen; Opus und Sonnet schon.
+    const antwort = modell.startsWith('claude-haiku')
+      ? await client.messages.create(anfrage)
+      : await client.beta.messages.create({ ...anfrage, betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' });
     if (antwort.stop_reason === 'refusal') return fehlerAntwort(res, 422, 'Die KI hat diesen Text nicht korrigiert. Prüfe, ob er unpassende Inhalte enthält.');
     if (antwort.stop_reason === 'max_tokens') return fehlerAntwort(res, 502, 'Die Antwort der KI war zu lang. Kürze den Text und versuche es nochmals.');
     const json = antwort.content.find(b => b.type === 'text')?.text;

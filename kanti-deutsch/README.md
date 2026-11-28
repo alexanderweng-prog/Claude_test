@@ -26,7 +26,7 @@ Die App ist reines HTML. Für die KI braucht es eine kleine Server-Funktion (`ap
 | `ANTHROPIC_API_KEY` | Pflicht. Dein Schlüssel. |
 | `KLASSEN_CODE` | Empfohlen. Code, den die Lernenden einmal in der App eingeben. Leer = alle mit der Adresse können auf deine Kosten korrigieren lassen. |
 | `LIMIT_PRO_STUNDE` | Korrekturen pro IP und Stunde, Standard 40. Im Schulnetz teilen sich oft alle Geräte eine IP: dann z. B. 400. |
-| `KI_MODELL` | Standard `claude-opus-5-5`. Günstiger: `claude-sonnet-5-5` oder `claude-haiku-5-5` (Qualität dann nicht geprüft). |
+| `KI_MODELL` | Standard `claude-haiku-5-5` (eingestellt). Gründlicher und teurer: `claude-sonnet-5-5` oder `claude-opus-5-5`. Die Lernenden können das Modell nicht wählen. |
 | `ERLAUBTE_HERKUNFT` | Nur nötig, wenn die App woanders liegt als die Funktion, z. B. `https://alexanderweng-prog.github.io` |
 
 4. Deploy. Die App läuft dann unter `https://<projekt>.vercel.app/` mit funktionierender KI.
@@ -35,7 +35,7 @@ Soll die App weiterhin über GitHub Pages (Startportal) laufen: in `config.js` b
 
 ## Kosten (Schätzung, nicht gemessen)
 
-Ein Aufsatz mit 400 Wörtern: rund 2 000 Eingabe- und 2 000–4 000 Ausgabe-Tokens. Mit Claude Opus 5.5 ($4 / $20 pro Million Tokens) sind das etwa **5–9 Rappen pro Korrektur**. Die echten Kosten zeigt die Anthropic-Konsole. Tipp: dort ein monatliches Ausgabenlimit setzen.
+Ein Aufsatz mit 400 Wörtern: rund 2 000 Eingabe- und 2 000–4 000 Ausgabe-Tokens. Mit Claude Haiku 5.5 ($0.10 / $0.50 pro Million Tokens) sind das **deutlich unter 1 Rappen pro Korrektur**; mit Claude Opus 5.5 ($4 / $20) etwa 5–9 Rappen. Die echten Kosten zeigt die Anthropic-Konsole. Tipp: dort ein monatliches Ausgabenlimit setzen.
 
 ## Grenzen
 
