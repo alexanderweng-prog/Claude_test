@@ -21,6 +21,8 @@
 
 **Mastery Mathe** (Repo Ich_lerne) liegt ebenfalls nicht hier: Die App wird bei jedem Push gebaut und unter https://alexanderweng-prog.github.io/Ich_lerne/ veröffentlicht. Die Kachel verlinkt dorthin.
 
+Die Kachel **Kanti-Trainer Deutsch** verlinkt auf https://kanti-deutsch.vercel.app/, weil die KI-Korrektur einen Server braucht. Der Ordner `kanti-deutsch/` ist die Quelle dieses Vercel-Projekts.
+
 Die **Lernwerkstatt** (Repo Container) liegt nicht hier, sondern läuft bei Vercel (https://lernwerkstatt-pi.vercel.app/), weil sie für die KI einen Server braucht. Die Kachel verlinkt dorthin.
 
 `kanti-trainer/` ist eine ältere Version des Kanti-Trainers und wird nicht verlinkt.
